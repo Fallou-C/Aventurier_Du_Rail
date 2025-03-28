@@ -15,27 +15,67 @@ typedef struct _Route{
 //faire une structure route-> 0 si prise par nous +inf sinon    + dirac +  matrice de pointeur
 //stocker carte de couleur dans un tableau de int + stocker objective dans liste
 
-Route ***allouerMatrice(int n) // matrice carré de pointeur de route de taille n
+Route **AllouerMatrice(int n) // matrice carré de pointeur de route de taille n
 {
-	Route*** matrice=(Route***)malloc(n*sizeof(Route**));
+	Route** matrice=(Route**)malloc(n*sizeof(Route*));
 	for(int i=0;i<n;i++)
 	{
-		matrice[i]=(Route **)malloc(n*sizeof(Route*));
+		matrice[i]=(Route *)malloc(n*sizeof(Route));
 	}
 	return matrice;
 }
 
-void detruireMatrice(Route *** matrice,int n) // on a une matrice de pointeur de route
+void DetruireMatrice(Route** matrice,int n) // on a une matrice de pointeur de route
 {
 	for(int i=0;i<n;i++)
 	{
-		for(int j=0;j<n;j++)
-		{
-			free(matrice[i][j]);
-		}
 		free(matrice[i]);
 	}
 	free(matrice);
+}
+
+void MatriceAdjacence(Route** matrice,int NbrCity,int nbTrack, int* trackData) // création de la matrice d'adjacence
+{
+	int inf = -1;
+	Route route;
+	for(int i = 0;i<NbrCity; i++)
+	{
+		for(int j = 0; j<=i; j++)
+		{
+			route.ville1 = i;
+			route.ville2 = j;
+			for(int k = 0; k < nbTrack*5; k++)
+			{
+				if (( (trackData[k*5] == i) || (trackData[k*5] == j) ) && ( (trackData[k*5 + 1] == j) && (trackData[k*5 + 1] == i) )) // || (trackData[k] == j && trackData[k+1] == i)
+				{
+					route.Nbr_Wagon = trackData[k*5 + 2];
+					route.Couleur1 = trackData[k*5 + 3];
+					route.Couleur2 = trackData[k*5 + 4];
+				}
+				else
+				{
+					route.Couleur1 = 0;
+					route.Couleur2 = 0;
+					route.Nbr_Wagon = inf;
+				}
+			}
+			matrice[i][j] = route;
+			matrice[j][i] = matrice[i][j];
+		}
+	}
+}
+
+void AfficherMatrice(Route** matrice, int n) //question 1
+{
+	for(int i=0;i<n;i++)
+	{
+		printf("(");
+		for(int j=0;j<(n-1);j++)
+		{
+			printf(" %d ; ",matrice[i][j].Nbr_Wagon);
+		}
+		printf("%d )\n",matrice[i][n-1].Nbr_Wagon);
+	}
 }
 
 void AfficherObjectif(MoveResult* mresult)
@@ -112,7 +152,7 @@ void JouerSolo(int continuer,MoveResult mresult ,BoardState EtatPlateau)
 		break;
 
 	case 1: // on pioche des objectives
-		moveData.action=4;
+		moveData.action = 4;
 		sendMove(&moveData, &mresult);
 		printf("move :%d\n",mresult.state);
 		AfficherObjectif(&mresult);
@@ -186,19 +226,39 @@ void JouerSolo(int continuer,MoveResult mresult ,BoardState EtatPlateau)
 
 int main(void)
 {
+	extern int DEBUG_LEVEL;
+	DEBUG_LEVEL = INTERN_DEBUG;
+
 	int continuer=1;
 	int InventaireCouleur[10];
 	int InventaireObjective[20];
+
 	GameSettings Gsetting=GameSettingsDefaults;
 	Gsetting.starter=1;
-	GameData Gdata=GameDataDefaults;
+	GameData Gdata = GameDataDefaults;
 	BoardState EtatPlateau;
 	DEBUG_LEVEL = MESSAGE;
+
 	int connect = connectToCGS("82.64.1.174", 15001);
-	sendName("Naaaaaaaaaaaaatacha");
+	sendName("Nataaaacha");
 	sendGameSettings(Gsetting,&Gdata);
 	MoveResult mresult;
 	printf("on est connecté : %d\n",connect);
+
+	/*
+	for (int i =0; i< Gdata.nbTracks; i++)
+	{
+		printf("%d %d %d %d %d\n",Gdata.trackData[i*5],Gdata.trackData[1 + 5*i],Gdata.trackData[2 + i*5],Gdata.trackData[3 + 5*i],Gdata.trackData[4 + 5*i]);
+	}*/
+	//printf("%d",Gdata.nbCities);
+	
+	
+	int n = Gdata.nbCities;
+	Route** matrice = AllouerMatrice(n);
+	MatriceAdjacence( matrice, n, Gdata.nbTracks, Gdata.trackData);
+	AfficherMatrice(matrice, n);
+	DetruireMatrice(matrice, n);
+
 	while(continuer)
 	{
 		printBoard();
