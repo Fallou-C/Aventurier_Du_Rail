@@ -5,8 +5,6 @@
 extern int DEBUG_LEVEL;
 
 typedef struct _Route{
-	int ville1;
-	int ville2;
 	int Couleur1;
 	int Couleur2;
 	int Nbr_Wagon;
@@ -37,33 +35,44 @@ void DetruireMatrice(Route** matrice,int n) // on a une matrice de pointeur de r
 void MatriceAdjacence(Route** matrice,int NbrCity,int nbTrack, int* trackData) // création de la matrice d'adjacence
 {
 	int inf = -1;
-	Route route;
 	for(int i = 0;i<NbrCity; i++)
 	{
-		for(int j = 0; j<=i; j++)
+		for(int j = 0; j<i; j++)
 		{
-			route.ville1 = i;
-			route.ville2 = j;
-			for(int k = 0; k < nbTrack*5; k++)
+			for(int k = 0; k < nbTrack*5; k+=5)
 			{
-				if (( (trackData[k*5] == i) || (trackData[k*5] == j) ) && ( (trackData[k*5 + 1] == j) && (trackData[k*5 + 1] == i) )) // || (trackData[k] == j && trackData[k+1] == i)
+				
+				if ((j == trackData[k]) && (i == trackData[k + 1]))
 				{
-					route.Nbr_Wagon = trackData[k*5 + 2];
-					route.Couleur1 = trackData[k*5 + 3];
-					route.Couleur2 = trackData[k*5 + 4];
+					//printf("i: %d j: %d track :%d \n",i,j,trackData[k+2]);
+					matrice[i][j].Nbr_Wagon = trackData[k + 2];
+					matrice[i][j].Couleur1 = trackData[k + 3];
+					matrice[i][j].Couleur2 = trackData[k + 4];
 				}
-				else
-				{
-					route.Couleur1 = 0;
-					route.Couleur2 = 0;
-					route.Nbr_Wagon = inf;
-				}
+				matrice[j][i] = matrice[i][j];
 			}
-			matrice[i][j] = route;
-			matrice[j][i] = matrice[i][j];
+			
+		}
+	}
+	for(int i = 0;i<NbrCity; i++)
+	{
+		for(int j = 0; j<i; j++)
+		{
+			for(int k = 0; k < nbTrack*5; k+=5)
+			{
+				
+				if (matrice[i][j].Nbr_Wagon == 0)
+				{
+					//printf("i: %d j: %d track :%d \n",i,j,trackData[k+2]);
+					matrice[i][j].Nbr_Wagon = inf;
+				}
+				matrice[j][i] = matrice[i][j];
+			}
+			
 		}
 	}
 }
+
 
 void AfficherMatrice(Route** matrice, int n) //question 1
 {
@@ -72,9 +81,9 @@ void AfficherMatrice(Route** matrice, int n) //question 1
 		printf("(");
 		for(int j=0;j<(n-1);j++)
 		{
-			printf(" %d ; ",matrice[i][j].Nbr_Wagon);
+			printf("%d;",matrice[i][j].Nbr_Wagon);
 		}
-		printf("%d )\n",matrice[i][n-1].Nbr_Wagon);
+		printf("%d)\n",matrice[i][n-1].Nbr_Wagon);
 	}
 }
 
@@ -240,7 +249,7 @@ int main(void)
 	DEBUG_LEVEL = MESSAGE;
 
 	int connect = connectToCGS("82.64.1.174", 15001);
-	sendName("Nataaaacha");
+	sendName("Nataaaachaaa");
 	sendGameSettings(Gsetting,&Gdata);
 	MoveResult mresult;
 	printf("on est connecté : %d\n",connect);
