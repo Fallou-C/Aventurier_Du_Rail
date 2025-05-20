@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "../tickettorideapi/ticketToRide.h"
+#include "../tickettorideapi/clientAPI.h"
 
 extern int DEBUG_LEVEL;
 
@@ -34,10 +35,10 @@ void DetruireMatrice(Route** matrice,int n) // on a une matrice de pointeur de r
 
 void MatriceAdjacence(Route** matrice,int NbrCity,int nbTrack, int* trackData) // création de la matrice d'adjacence
 {
-	int inf = -1;
+	int inf = 2000;
 	for(int i = 0;i<NbrCity; i++)
 	{
-		for(int j = 0; j<i; j++)
+		for(int j = 0; j < i; j++)
 		{
 			for(int k = 0; k < nbTrack*5; k+=5)
 			{
@@ -60,7 +61,6 @@ void MatriceAdjacence(Route** matrice,int NbrCity,int nbTrack, int* trackData) /
 		{
 			for(int k = 0; k < nbTrack*5; k+=5)
 			{
-				
 				if (matrice[i][j].Nbr_Wagon == 0)
 				{
 					//printf("i: %d j: %d track :%d \n",i,j,trackData[k+2]);
@@ -68,7 +68,6 @@ void MatriceAdjacence(Route** matrice,int NbrCity,int nbTrack, int* trackData) /
 				}
 				matrice[j][i] = matrice[i][j];
 			}
-			
 		}
 	}
 }
@@ -81,9 +80,9 @@ void AfficherMatrice(Route** matrice, int n) //question 1
 		printf("(");
 		for(int j=0;j<(n-1);j++)
 		{
-			printf("%d;",matrice[i][j].Nbr_Wagon);
+			printf("%d %d;",matrice[i][j].Couleur1,matrice[i][j].Couleur2);
 		}
-		printf("%d)\n",matrice[i][n-1].Nbr_Wagon);
+		printf("%d %d)\n",matrice[i][n-1].Couleur1,matrice[i][n-1].Couleur2);
 	}
 }
 
@@ -109,12 +108,12 @@ void AfficherEtatPlateau(BoardState* EtatPlateau)
 	printf("\n");
 }
 
-void AfficherAction(MoveData* mData)
+void AfficherAction(MoveData* mData, MoveResult* mresult)
 {
 	switch (mData -> action)
 	{
 	case 1:
-		printf("il prend la route \n");
+		printf("il prend la route entre %d et %d avec %d locomotives %d\n",mData -> claimRoute.from,mData -> claimRoute.to,mData -> claimRoute.nbLocomotives,mData -> claimRoute.color);
 		break;
 
 	case 2:
@@ -122,7 +121,7 @@ void AfficherAction(MoveData* mData)
 		break;
 
 	case 3:
-		printf("il choisit une carte \n");
+		printf("il choisit la carte : %d \n",mData -> drawCard);
 		break;
 
 	case 4:
@@ -147,13 +146,13 @@ void JouerSolo(int continuer,MoveResult mresult ,BoardState EtatPlateau)
 	{
 	case 0: //on laisse l'adversaire jouer
 		getMove(&moveData, &mresult);
-		AfficherAction(&moveData);
+		AfficherAction(&moveData,&mresult);
 		free(mresult.opponentMessage);
 		free(mresult.message);
 		if ( ((moveData.action%2) || (moveData.drawCard!=9 )) && (moveData.action != 1) )
 		{
 			getMove(&moveData, &mresult);
-			AfficherAction(&moveData);
+			AfficherAction(&moveData,&mresult);
 			free(mresult.opponentMessage);
 			free(mresult.message);
 		}
@@ -181,7 +180,7 @@ void JouerSolo(int continuer,MoveResult mresult ,BoardState EtatPlateau)
 		free(mresult.message);
 		break;
 
-	case 2: // on pioche un carte de la pioche wagon face caché
+	case 2: // on pioche une carte de la pioche wagon face caché
 		moveData.action = 2;
 		sendMove(&moveData, &mresult);
 		printf("move :%d\n",mresult.state);
@@ -231,6 +230,124 @@ void JouerSolo(int continuer,MoveResult mresult ,BoardState EtatPlateau)
 	
 	}
 }
+/*
+int MachineEtat(MoveResult mresult, MoveData moveData) //on s'inpire pas mal de ce qui a été fait pour jouer solo
+{
+	int action = moveData.action;
+	// des switch 5 cas : on doit jouer une fois, deux fois, l'adversaire joue une fois, deux fois, c'est ff
+	switch(action)
+	{
+	case 1:
+		return action;
+		break;
+	case 2:
+		getmove(&mresult,&moveData);
+		return moveData.action;
+                break;
+        case 3:
+                break;
+        case 4:
+                break;
+        case 5:
+                break;
+	}
+}*/
+
+int* RoutePrenable(int* InventaireCouleur, Route** matriceRoute, int tailleMatrice)
+{
+	int* tab = (int *)malloc(4 * sizeof(int));
+	Route route;
+	for (int i=0; i< tailleMatrice ;i++)
+	{
+		for (int  j=0; j < i ; j++)
+		{
+			route = matriceRoute[i][j];
+			if ( ((InventaireCouleur[route.Couleur1]) >= route.Nbr_Wagon ) && (route.Nbr_Wagon != 0))//+ InventaireCouleur[9] on ignore les joker
+			{
+				tab[0] = i;
+				tab[1] = j;
+				tab[2] = route.Couleur1;
+				tab[3] = route.Nbr_Wagon;
+				matriceRoute[i][j].Nbr_Wagon = 0;
+				return tab;
+			}
+			if ( ((InventaireCouleur[route.Couleur2]) >= route.Nbr_Wagon )  && (route.Nbr_Wagon != 0))
+			{
+				tab[0] = i;
+				tab[1] = j;
+				tab[2] = route.Couleur2;
+				tab[3] = route.Nbr_Wagon;
+				matriceRoute[i][j].Nbr_Wagon = 0;
+				return tab;
+			}
+		}
+	}
+	tab[0] = 0;
+	tab[1] = 0;
+	tab[2] = 0;
+	tab[3] = 0;
+	return tab;
+}
+
+void ClaimeurFou(int firstturn ,MoveResult mresult ,BoardState EtatPlateau, int* InventaireCouleur, Route** matrice,int taille, MoveData data) // il claim si possible
+{
+	if(firstturn) //premier tour on prend des objectives
+	{
+		printf("on joue premier tour \n");
+		data.action = 4;
+		sendMove(&data, &mresult);
+		data.action =  5;
+		data.chooseObjectives[0] = 1;
+		data.chooseObjectives[1] = 0;
+		data.chooseObjectives[2] = 1;
+		sendMove(&data,&mresult);
+	}
+	else
+	{
+		 //on prend si on peut
+		int* routeClaimable = RoutePrenable(InventaireCouleur,matrice,taille); //tableau de 4 entier
+
+/*
+		for (int i=0 ; i<4 ; i++)
+		{
+			printf(" route : %d ", routeClaimable[i]);
+		}
+		printf("\n");
+*/
+
+		if ( routeClaimable[0] )
+		{
+			printf("on claim \n");
+			data.action = 1;
+			data.claimRoute.from = routeClaimable[0];
+			data.claimRoute.to = routeClaimable[1];
+			data.claimRoute.color = routeClaimable[2];
+			data.claimRoute.nbLocomotives = 0; // nombre de joker qu'on joue
+			printf("from %d to %d color %d nbloc %d \n",routeClaimable[0],routeClaimable[1],routeClaimable[2],routeClaimable[3]);
+			sendMove(&data, &mresult);
+		}
+		else // sinon on pioche
+		{
+			printf("on pioche \n");
+			data.action = 2;
+			sendMove(&data, &mresult);
+			sendMove(&data, &mresult);
+		}
+	}
+}
+
+
+/*************** Nouveauu API configuration : ***********************
+ * 
+ * adress serveur en ligne : http://82.29.170.160:8889/
+sendGameSetting( char* , GameData );
+
+char* = "TRAINING NICE_BOT"
+	"TRAINING RANDOM_PLAYER"
+	"TRAINING DO_NOTHING"
+
++  messge de base dans le gamedata (message et op_message) null par défaut 
+*/
 
 
 int main(void)
@@ -239,26 +356,27 @@ int main(void)
 	DEBUG_LEVEL = INTERN_DEBUG;
 
 	int continuer=1;
-	int InventaireCouleur[10];
+	int firstturn = 1;
+	int InventaireCouleur[10] = {0,0,0,0,0,0,0,0,0,0};
 	int InventaireObjective[20];
 
-	GameSettings Gsetting=GameSettingsDefaults;
-	Gsetting.starter=1;
-	GameData Gdata = GameDataDefaults;
+	GameData Gdata;
 	BoardState EtatPlateau;
 	DEBUG_LEVEL = MESSAGE;
 
-	int connect = connectToCGS("82.64.1.174", 15001);
-	sendName("Nataaaachaaa");
-	sendGameSettings(Gsetting,&Gdata);
+	connectToCGS("82.29.170.160", 15001, "Natacha");
+	//sendName("Nataaaachaaa");
+	sendGameSettings("TRAINING NICE_BOT",&Gdata);
+	
 	MoveResult mresult;
-	printf("on est connecté : %d\n",connect);
+	MoveData data;
+	//printf("on est connecté : %d\n",connect);
 
-	/*
+	
 	for (int i =0; i< Gdata.nbTracks; i++)
 	{
 		printf("%d %d %d %d %d\n",Gdata.trackData[i*5],Gdata.trackData[1 + 5*i],Gdata.trackData[2 + i*5],Gdata.trackData[3 + 5*i],Gdata.trackData[4 + 5*i]);
-	}*/
+	}
 	//printf("%d",Gdata.nbCities);
 	
 	
@@ -266,13 +384,47 @@ int main(void)
 	Route** matrice = AllouerMatrice(n);
 	MatriceAdjacence( matrice, n, Gdata.nbTracks, Gdata.trackData);
 	AfficherMatrice(matrice, n);
-	DetruireMatrice(matrice, n);
+	//DetruireMatrice(matrice, n);
+
+	int QuiJoue = Gdata.starter;
+
+	// on initialise les cartes qu'on pioche : 
+	for(int i=0; i<4 ;i++)
+	{
+		InventaireCouleur[Gdata.cards[i]] += 1;
+	}
 
 	while(continuer)
 	{
 		printBoard();
-		printf("qui commence : %d \n",Gdata.starter);
-		JouerSolo(continuer,mresult,EtatPlateau);
+		printf("%d joue\n",QuiJoue);
+		
+		if (QuiJoue == 1) // l'adversaire joue
+		{
+			printf("adversaire joue \n");
+			getMove(&data, &mresult);
+			if ( ((data.action%2) || (data.drawCard!=9 )) && (data.action != 1) )
+			{
+				getMove(&data, &mresult);
+			}
+			if (data.action == 1)
+			{
+				int a = data.claimRoute.from;
+				int b = data.claimRoute.to;
+				matrice[a][b].Nbr_Wagon = 2000;
+			}
+			QuiJoue = 0;
+		}
+		else
+		{
+			ClaimeurFou(firstturn, mresult ,EtatPlateau,InventaireCouleur,matrice,n,data);
+			QuiJoue = 1;
+			firstturn = 0 ;
+		}
+		//printf("qui commence : %d \n",Gdata.starter);
+		
+		//JouerSolo(continuer,mresult,EtatPlateau);
+		
 		
 	}
 	printf("c'est fini");
