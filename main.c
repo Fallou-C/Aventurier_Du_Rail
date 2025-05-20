@@ -253,31 +253,69 @@ int MachineEtat(MoveResult mresult, MoveData moveData) //on s'inpire pas mal de 
 	}
 }*/
 
+int* RouteGrise(int* InventaireCouleur, int a, int b, int tailleMatrice,Route route)
+{
+	int* tab = (int *)malloc(5 * sizeof(int));
+	int j = 0;
+	for(int i=0;i<10;i++)
+	{
+		if (InventaireCouleur[i] > InventaireCouleur[j]) {j = i;}
+	} // j indice du max
+	//printf("couleur max : %d \n",j);
+	//printf(" on peut claime : %d\n",InventaireCouleur[j] >= route.Nbr_Wagon);
+	if (InventaireCouleur[j] >= route.Nbr_Wagon){
+		tab[0] = a;
+		tab[1] = b;
+		tab[2] = j;
+		tab[3] = route.Nbr_Wagon;
+		tab[4] = 1;
+		InventaireCouleur[j] -= route.Nbr_Wagon;
+		return tab;
+	}
+	tab[0] = 0;
+	tab[1] = 0;
+	tab[2] = 0;
+	tab[3] = 0;
+	tab[4] = 0; // pas de route à prendre :(
+	return tab;
+}
+
 int* RoutePrenable(int* InventaireCouleur, Route** matriceRoute, int tailleMatrice)
 {
-	int* tab = (int *)malloc(4 * sizeof(int));
+	int* tab = (int *)malloc(5 * sizeof(int));
 	Route route;
-	for (int i=0; i< tailleMatrice ;i++)
+	for (int i=0; i < tailleMatrice ;i++)
 	{
 		for (int  j=0; j < i ; j++)
 		{
 			route = matriceRoute[i][j];
+			if ((route.Couleur1 == 9 || route.Couleur2 == 9) && route.Nbr_Wagon > 0){
+				tab = RouteGrise(InventaireCouleur,i,j,tailleMatrice,route);
+				if (tab[4]){ // on renvoie que si on peut claim
+					matriceRoute[i][j].Nbr_Wagon = 0;
+					matriceRoute[j][i].Nbr_Wagon = 0;
+					return tab;}
+			}
 			if ( ((InventaireCouleur[route.Couleur1]) >= route.Nbr_Wagon ) && (route.Nbr_Wagon != 0))//+ InventaireCouleur[9] on ignore les joker
 			{
 				tab[0] = i;
 				tab[1] = j;
 				tab[2] = route.Couleur1;
 				tab[3] = route.Nbr_Wagon;
+				tab[4] = 1; // on indique que l'on peut prendre la route
 				matriceRoute[i][j].Nbr_Wagon = 0;
+				matriceRoute[j][i].Nbr_Wagon = 0;
 				return tab;
 			}
-			if ( ((InventaireCouleur[route.Couleur2]) >= route.Nbr_Wagon )  && (route.Nbr_Wagon != 0))
+			else if ( ((InventaireCouleur[route.Couleur2]) >= route.Nbr_Wagon )  && (route.Nbr_Wagon != 0))
 			{
 				tab[0] = i;
 				tab[1] = j;
 				tab[2] = route.Couleur2;
 				tab[3] = route.Nbr_Wagon;
+				tab[4] = 1;
 				matriceRoute[i][j].Nbr_Wagon = 0;
+				matriceRoute[j][i].Nbr_Wagon = 0;
 				return tab;
 			}
 		}
@@ -286,6 +324,7 @@ int* RoutePrenable(int* InventaireCouleur, Route** matriceRoute, int tailleMatri
 	tab[1] = 0;
 	tab[2] = 0;
 	tab[3] = 0;
+	tab[4] = 0; // pas de route à prendre :(
 	return tab;
 }
 
@@ -315,7 +354,7 @@ void ClaimeurFou(int firstturn ,MoveResult mresult ,BoardState EtatPlateau, int*
 		printf("\n");
 */
 
-		if ( routeClaimable[0] )
+		if ( routeClaimable[4] )
 		{
 			printf("on claim \n");
 			data.action = 1;
@@ -345,7 +384,7 @@ sendGameSetting( char* , GameData );
 char* = "TRAINING NICE_BOT"
 	"TRAINING RANDOM_PLAYER"
 	"TRAINING DO_NOTHING"
-
+seed debut : f1b531fb0b78
 +  messge de base dans le gamedata (message et op_message) null par défaut 
 */
 
@@ -361,29 +400,31 @@ int main(void)
 	int InventaireObjective[20];
 
 	GameData Gdata;
+	//Gdata.gameSeed = 0xf1b531fb0b78;
 	BoardState EtatPlateau;
 	DEBUG_LEVEL = MESSAGE;
 
 	connectToCGS("82.29.170.160", 15001, "Natacha");
-	//sendName("Nataaaachaaa");
-	sendGameSettings("TRAINING NICE_BOT",&Gdata);
+	sendGameSettings("TRAINING NICE_BOT seed=9892492",&Gdata);
 	
 	MoveResult mresult;
 	MoveData data;
 	//printf("on est connecté : %d\n",connect);
 
-	
+	/*	
 	for (int i =0; i< Gdata.nbTracks; i++)
 	{
 		printf("%d %d %d %d %d\n",Gdata.trackData[i*5],Gdata.trackData[1 + 5*i],Gdata.trackData[2 + i*5],Gdata.trackData[3 + 5*i],Gdata.trackData[4 + 5*i]);
 	}
+	*/
 	//printf("%d",Gdata.nbCities);
 	
+	printf("%d\n",Gdata.gameSeed);
 	
 	int n = Gdata.nbCities;
 	Route** matrice = AllouerMatrice(n);
 	MatriceAdjacence( matrice, n, Gdata.nbTracks, Gdata.trackData);
-	AfficherMatrice(matrice, n);
+	//AfficherMatrice(matrice, n);
 	//DetruireMatrice(matrice, n);
 
 	int QuiJoue = Gdata.starter;
@@ -403,7 +444,7 @@ int main(void)
 		{
 			printf("adversaire joue \n");
 			getMove(&data, &mresult);
-			if ( ((data.action%2) || (data.drawCard!=9 )) && (data.action != 1) )
+			if ( (data.action == 2) || ((data.action == 3) && (data.drawCard != 9)) ||  data.action == 4 )
 			{
 				getMove(&data, &mresult);
 			}
@@ -412,12 +453,15 @@ int main(void)
 				int a = data.claimRoute.from;
 				int b = data.claimRoute.to;
 				matrice[a][b].Nbr_Wagon = 2000;
+				matrice[b][a].Nbr_Wagon = 2000;
+				printf("il prend from %d to %d \n",a,b);
 			}
 			QuiJoue = 0;
 		}
 		else
 		{
 			ClaimeurFou(firstturn, mresult ,EtatPlateau,InventaireCouleur,matrice,n,data);
+			//for(int i =0;i<10;i++){printf("nombre de carte couleur dispo : couleur %d nombre %d \n",i,InventaireCouleur[i]);}
 			QuiJoue = 1;
 			firstturn = 0 ;
 		}
@@ -427,7 +471,8 @@ int main(void)
 		
 		
 	}
-	printf("c'est fini");
+	printf("c'est fini\n");
+	DetruireMatrice(matrice, n);
 	return 1;
 }
 
