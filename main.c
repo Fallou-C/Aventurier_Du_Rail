@@ -282,7 +282,7 @@ int* RouteGrise(int* InventaireCouleur, int a, int b, int tailleMatrice,Route ro
 
 int* RoutePrenable(int* InventaireCouleur, Route** matriceRoute, int tailleMatrice)
 {
-	int* tab = (int *)malloc(5 * sizeof(int));
+	int* tab = (int *)malloc(6 * sizeof(int));
 	Route route;
 	for (int i=0; i < tailleMatrice ;i++)
 	{
@@ -296,24 +296,46 @@ int* RoutePrenable(int* InventaireCouleur, Route** matriceRoute, int tailleMatri
 					matriceRoute[j][i].Nbr_Wagon = 0;
 					return tab;}
 			}
-			if ( ((InventaireCouleur[route.Couleur1]) >= route.Nbr_Wagon ) && (route.Nbr_Wagon != 0))//+ InventaireCouleur[9] on ignore les joker
+			if (route.Couleur1 != 9 && ((InventaireCouleur[route.Couleur1] +  InventaireCouleur[9]) >= route.Nbr_Wagon ) && (route.Nbr_Wagon != 0))//+ InventaireCouleur[9] on ignore les joker
 			{
 				tab[0] = i;
 				tab[1] = j;
 				tab[2] = route.Couleur1;
 				tab[3] = route.Nbr_Wagon;
 				tab[4] = 1; // on indique que l'on peut prendre la route
+
+				if (InventaireCouleur[route.Couleur1] >= route.Nbr_Wagon){
+					InventaireCouleur[route.Couleur1] -= route.Nbr_Wagon;
+					tab[5] = 0;
+				}
+				else {
+					tab [5] = route.Nbr_Wagon - InventaireCouleur[route.Couleur1];
+					InventaireCouleur[9] -= route.Nbr_Wagon - InventaireCouleur[route.Couleur1];
+					InventaireCouleur[route.Couleur1] = 0;
+				}
+
 				matriceRoute[i][j].Nbr_Wagon = 0;
 				matriceRoute[j][i].Nbr_Wagon = 0;
 				return tab;
 			}
-			else if ( ((InventaireCouleur[route.Couleur2]) >= route.Nbr_Wagon )  && (route.Nbr_Wagon != 0))
+			else if (route.Couleur2 != 9 &&  ((InventaireCouleur[route.Couleur2]) >= route.Nbr_Wagon )  && (route.Nbr_Wagon != 0))
 			{
 				tab[0] = i;
 				tab[1] = j;
 				tab[2] = route.Couleur2;
 				tab[3] = route.Nbr_Wagon;
 				tab[4] = 1;
+				
+				if (InventaireCouleur[route.Couleur2] >= route.Nbr_Wagon){
+					InventaireCouleur[route.Couleur2]-= route.Nbr_Wagon;
+					tab[5] = 0;
+				}
+				else {
+					tab [5] = route.Nbr_Wagon - InventaireCouleur[route.Couleur2];
+					InventaireCouleur[9] -= route.Nbr_Wagon - InventaireCouleur[route.Couleur2];
+					InventaireCouleur[route.Couleur2] = 0;
+				}
+
 				matriceRoute[i][j].Nbr_Wagon = 0;
 				matriceRoute[j][i].Nbr_Wagon = 0;
 				return tab;
@@ -325,6 +347,7 @@ int* RoutePrenable(int* InventaireCouleur, Route** matriceRoute, int tailleMatri
 	tab[2] = 0;
 	tab[3] = 0;
 	tab[4] = 0; // pas de route à prendre :(
+	tab[5] = 0;
 	return tab;
 }
 
@@ -361,7 +384,7 @@ void ClaimeurFou(int firstturn ,MoveResult mresult ,BoardState EtatPlateau, int*
 			data.claimRoute.from = routeClaimable[0];
 			data.claimRoute.to = routeClaimable[1];
 			data.claimRoute.color = routeClaimable[2];
-			data.claimRoute.nbLocomotives = 0; // nombre de joker qu'on joue
+			data.claimRoute.nbLocomotives = routeClaimable[5]; // nombre de joker qu'on joue
 			printf("from %d to %d color %d nbloc %d \n",routeClaimable[0],routeClaimable[1],routeClaimable[2],routeClaimable[3]);
 			sendMove(&data, &mresult);
 		}
@@ -370,7 +393,9 @@ void ClaimeurFou(int firstturn ,MoveResult mresult ,BoardState EtatPlateau, int*
 			printf("on pioche \n");
 			data.action = 2;
 			sendMove(&data, &mresult);
+			InventaireCouleur[mresult.card] += 1;
 			sendMove(&data, &mresult);
+			InventaireCouleur[mresult.card] += 1;
 		}
 	}
 }
