@@ -19,7 +19,7 @@ main.o : main.c ../tickettorideapi/ticketToRide.c matrice.c utility.c bot.c
 	gcc -c main.c 
 
 main : main.o  ticketToRide.o clientAPI.o matrice.o utility.o bot.o
-	gcc -Wall -o main main.o clientAPI.o ticketToRide.o
+	gcc -Wall -o main main.o clientAPI.o ticketToRide.o matrice.o utility.o bot.o
 
 clean :
 	rm *.o main

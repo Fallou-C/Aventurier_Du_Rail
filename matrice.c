@@ -5,7 +5,7 @@
 #include "matrice.h"
 
 
-Route **AllouerMatrice(int n) // matrice carré de pointeur de route de taille n
+Route** AllouerMatrice(int n) // matrice carré de pointeur de route de taille n
 {
 	Route** matrice=(Route**)malloc(n*sizeof(Route*));
 	for(int i=0;i<n;i++)

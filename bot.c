@@ -6,7 +6,7 @@
 #include "bot.h"
 #include "utility.h"
 
-int objectif_actuelle = 0;
+//int objectif_actuelle = 0;
 
 void ClaimeurFou(int firstturn ,MoveResult mresult ,BoardState EtatPlateau, int* InventaireCouleur, Route** matrice,int taille, MoveData data,int min, int* wagon) // il claim si possible
 {
@@ -58,7 +58,7 @@ void ClaimeurFou(int firstturn ,MoveResult mresult ,BoardState EtatPlateau, int*
 }
 
 
-void ClaimCourtChemin(int firstturn ,MoveResult mresult ,BoardState EtatPlateau, int* InventaireCouleur,int* InventaireObjective, Route** matrice,int taille, MoveData data, int* wagon,int min)
+void ClaimCourtChemin(int firstturn ,MoveResult mresult ,BoardState EtatPlateau, int* InventaireCouleur,int* InventaireObjective, Route** matrice,int taille, MoveData data, int* wagon,int min,int objectif_actuelle)
 {
 	if(firstturn) //premier tour on prend des objectives
 	{
@@ -67,19 +67,19 @@ void ClaimCourtChemin(int firstturn ,MoveResult mresult ,BoardState EtatPlateau,
 		sendMove(&data, &mresult);
 		data.action =  5;
 		data.chooseObjectives[0] = 1;
-		data.chooseObjectives[1] = 0;
-		data.chooseObjectives[2] = 1;
+		data.chooseObjectives[1] = 1;
+		data.chooseObjectives[2] = 0;
 		AfficherObjectif(&mresult);
 		InventaireObjective[0] = mresult.objectives[0].from;
 		InventaireObjective[1] = mresult.objectives[0].to;
-		InventaireObjective[2] = mresult.objectives[2].from;
-		InventaireObjective[3] = mresult.objectives[2].to;
+		InventaireObjective[2] = mresult.objectives[1].from;
+		InventaireObjective[3] = mresult.objectives[1].to;
 		InventaireObjective[4] = -1;
 		// mettre -1 sur le dernier objectif comme arrêt
 
 		sendMove(&data,&mresult);
 	}
-	else	//attention cas fini objectif dans la liste
+	else	//attention cas fini objectif dans la liste + cas objectifs inclue l'un dans l'autre
 	{
 		int a,b;
 		a = InventaireObjective[objectif_actuelle * 2];
@@ -92,8 +92,8 @@ void ClaimCourtChemin(int firstturn ,MoveResult mresult ,BoardState EtatPlateau,
 			b = InventaireObjective[objectif_actuelle * 2 + 1];
 			prochain_claim = CheminCourt(a,b,matrice,taille);
 		}
-		printf("à claim :%d %d\n",prochain_claim[0],prochain_claim[1]);
-		if (a!=-1){
+		printf("à claim :%d %d ab:%d %d obj : %d\n",prochain_claim[0],prochain_claim[1],a,b,objectif_actuelle);
+		if (prochain_claim[0] != -1){ //on regarde si l'objetifs à été fait
 			ClaimRoute(0,prochain_claim[0],prochain_claim[1],matrice, taille,mresult ,EtatPlateau,data,InventaireCouleur,wagon);
 			}
 		else{ClaimeurFou(firstturn, mresult ,EtatPlateau,InventaireCouleur,matrice,taille,data,min,wagon);}

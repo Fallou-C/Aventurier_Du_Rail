@@ -8,7 +8,7 @@
 
 extern int DEBUG_LEVEL;
 
-extern int objectif_actuelle;
+//extern int* objectif_actuelle;
 
 
 //faire une structure route-> 0 si prise par nous +inf sinon    + dirac +  matrice de pointeur
@@ -17,6 +17,8 @@ extern int objectif_actuelle;
 
 /*
 #to do :
+-pb si entouré ou chemin impossible
+
 -algo de choix du chemin le plus rentable en terme de point pour les objectifs (choix)
 - quand reprendre des objectifs
 - dystra et choix du plus petit chemin -> prendre en compte les cartes wagons qu'on a au début et garder les plus court ou plus rentable
@@ -39,7 +41,9 @@ sendGameSetting( char* , GameData );
 char* = "TRAINING NICE_BOT"
 	"TRAINING PLAY_RANDOM"
 	"TRAINING DO_NOTHING"
-seed debug : 10479304,13149549
+seed debug : 
+	pioche sans raison 10479304  8104058: 
+	core dump : 5199207 check -> pb quand tous étaient fini (chercher d'autre seed du même style enn sah)
 +  messge de base dans le gamedata (message et op_message) null par défaut 
 */
 
@@ -60,11 +64,10 @@ int main(void)
 	DEBUG_LEVEL = MESSAGE;
 
 	connectToCGS("82.29.170.160", 15001, "Natachaa");
-	sendGameSettings("TRAINING NICE_BOT",&Gdata);
+	sendGameSettings("TRAINING PLAY_RANDOM seed=9892492",&Gdata);
 	
 	MoveResult mresult;
 	MoveData data;
-	//printf("on est connecté : %d\n",connect);
 
 	/*	
 	for (int i =0; i< Gdata.nbTracks; i++)
@@ -85,13 +88,13 @@ int main(void)
 	int QuiJoue = Gdata.starter;
 	int wagon=45;
 	int min=4;
-
+	int objectif_actuelle = 0;
 	// on initialise les cartes qu'on pioche : 
 	for(int i=0; i<4 ;i++)
 	{
 		InventaireCouleur[Gdata.cards[i]] += 1;
 	}
-
+	
 	while(continuer)
 	{
 		printBoard();
@@ -117,10 +120,11 @@ int main(void)
 		}
 		else
 		{
-			ClaimCourtChemin(firstturn , mresult , EtatPlateau,  InventaireCouleur, InventaireObjective,  matrice, n, data, &wagon,min);
+			ClaimCourtChemin(firstturn , mresult , EtatPlateau,  InventaireCouleur, InventaireObjective,  matrice, n, data, &wagon,min,objectif_actuelle);
 			//ClaimeurFou(firstturn, mresult ,EtatPlateau,InventaireCouleur,matrice,n,data,min,&wagon);
 			//for(int i =0;i<10;i++){printf("nombre de carte couleur dispo : couleur %d nombre %d \n",i,InventaireCouleur[i]);}
-			if(min>wagon){min=0;}
+			if(min>wagon){min=wagon;} 
+			// penser à compter les cartes
 			//printf("nbr wagon : %d\n",wagon);
 			QuiJoue = 1;
 			firstturn = 0 ;
@@ -134,6 +138,21 @@ int main(void)
 }
 
 /*
+debug seed 5199207:  check
+Les villes :
+Kansas City�ur 17 Houston 14 score: 5 
+Montréal;`�ur 29 Atlanta 25 score: 9 
+Winnipeg ;`�ur 10 Houston 14 score: 12 
+
+
+
+
+
+✘Objective Sault St. Marie (20) → Nashville (26) : -8 points
+	✘Objective Toronto (28) → Miami (35) : -10 points
+
+
+
 	int TirerPiocher=1;
 	int ComptePioche=0;
 	int ChoisirCarte = 1;

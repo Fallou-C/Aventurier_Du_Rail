@@ -282,6 +282,7 @@ void ClaimRoute(int option,int i, int j, Route** matriceRoute, int n,MoveResult 
 {
 	int* tab = (int *)malloc(6 * sizeof(int));
 	Route route = matriceRoute[i][j];
+    printf("route : %d %d %d\n",route.Couleur1,route.Couleur2,route.Nbr_Wagon);
 	if ((route.Couleur1 == 9 || route.Couleur2 == 9) && (route.Nbr_Wagon > 0) && (route.Nbr_Wagon <= *wagon) ){
 		tab = RouteGrise(InventaireCouleur,i,j,n,route);
 		if (tab[4]){ // on renvoie que si on peut claim
