@@ -440,6 +440,7 @@ int* CheminCourt(int a,int b, Route** matrice, int n) // renvoie le prochain che
 		else {prec[i-n]=D_prec[i];}
 	}
 
+	//printf("ville de départ: %d ",a);for(int  i = 0; i < n ; i++){printf(" distance par rapport à %d = %d \n", i,D[i]);}printf("\n");
 	//int last=b;printf("chemin à prendre : ");for(int i = 0; i<n;i++){printf(" %d ",prec[last]);last=prec[last];}printf("\n");
 
 	int der_ville = b;
@@ -451,7 +452,7 @@ int* CheminCourt(int a,int b, Route** matrice, int n) // renvoie le prochain che
 		//printf(" deux dernière ville %d %d\n",chemin[0],chemin[1]);
 	}
 
-	if (matrice[prec[b]][b].Nbr_Wagon == 0) //faux
+	if (matrice[prec[b]][b].Nbr_Wagon == 0) 
 	{
 		chemin[0]=-1;
 		chemin[1]=-1;
@@ -459,4 +460,39 @@ int* CheminCourt(int a,int b, Route** matrice, int n) // renvoie le prochain che
 	}
 
 	return chemin;
+}
+
+bool* CourtObjectif(int nbr_objectif, Route** matrice, int taille, int* InventaireObjective,MoveResult mresult ) //améliorable en prenant ceux gratuit par exemple
+{
+	// on prend les objectifs les plus simples à faire
+	bool* obj = (bool*)malloc(sizeof(bool)*3);
+	obj[0] = false;
+	obj[1] = false;
+	obj[2] = false;
+	int* distance = (int*)malloc(sizeof(int)*3);
+
+	int objective[6] = {mresult.objectives[0].from,mresult.objectives[0].to,mresult.objectives[1].from,mresult.objectives[1].to,mresult.objectives[2].from,mresult.objectives[2].to};
+
+	for(int i=0;i<3;i++)
+	{
+		distance[i] = Dijkstra(objective[2*i],matrice, taille)[objective[2*i + 1]];
+	}
+
+	int ind_obj = 0;
+	int ind_min = 0;
+	for(int i = 0; i < nbr_objectif; i++)
+	{
+		for(int j = 0; j < 3; j++)
+		{
+			if ((distance[j] < distance[ind_min]) && (!obj[j])) {ind_min = j;}
+		}
+		obj[ind_min] = true;
+		InventaireObjective[ind_obj*2] = mresult.objectives[ind_min].from;
+		InventaireObjective[ind_obj*2 + 1] = mresult.objectives[ind_min].to;
+		ind_obj += 1;
+		if (obj[0]){ind_min = 1;}
+		else {ind_min = 0;}
+	}
+	InventaireObjective[ind_obj*2] = -1;
+	return obj;
 }

@@ -42,6 +42,7 @@ char* = "TRAINING NICE_BOT"
 	"TRAINING PLAY_RANDOM"
 	"TRAINING DO_NOTHING"
 seed debug : 
+	probleme de message 10592888
 	pioche sans raison 10479304  8104058: 
 	core dump : 5199207 check -> pb quand tous étaient fini (chercher d'autre seed du même style enn sah)
 +  messge de base dans le gamedata (message et op_message) null par défaut 
@@ -64,7 +65,7 @@ int main(void)
 	DEBUG_LEVEL = MESSAGE;
 
 	connectToCGS("82.29.170.160", 15001, "Natachaa");
-	sendGameSettings("TRAINING PLAY_RANDOM seed=9892492",&Gdata);
+	sendGameSettings("TRAINING NICE_BOT seed=10592888",&Gdata);
 	
 	MoveResult mresult;
 	MoveData data;
@@ -123,6 +124,7 @@ int main(void)
 			ClaimCourtChemin(firstturn , mresult , EtatPlateau,  InventaireCouleur, InventaireObjective,  matrice, n, data, &wagon,min,objectif_actuelle);
 			//ClaimeurFou(firstturn, mresult ,EtatPlateau,InventaireCouleur,matrice,n,data,min,&wagon);
 			//for(int i =0;i<10;i++){printf("nombre de carte couleur dispo : couleur %d nombre %d \n",i,InventaireCouleur[i]);}
+			//for(int i =0;i<10;i++){printf("objecitfs : de %d à %d \n",InventaireObjective[2*i],InventaireObjective[i*2 +1]);}
 			if(min>wagon){min=wagon;} 
 			// penser à compter les cartes
 			//printf("nbr wagon : %d\n",wagon);

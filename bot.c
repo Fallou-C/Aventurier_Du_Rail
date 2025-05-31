@@ -66,15 +66,18 @@ void ClaimCourtChemin(int firstturn ,MoveResult mresult ,BoardState EtatPlateau,
 		data.action = 4;
 		sendMove(&data, &mresult);
 		data.action =  5;
-		data.chooseObjectives[0] = 1;
-		data.chooseObjectives[1] = 1;
-		data.chooseObjectives[2] = 0;
+		bool* obj = CourtObjectif(2,  matrice,  taille,  InventaireObjective, mresult );
+		
+		data.chooseObjectives[0] = obj[0];
+		data.chooseObjectives[1] = obj[1];
+		data.chooseObjectives[2] = obj[2];
 		AfficherObjectif(&mresult);
+		/*
 		InventaireObjective[0] = mresult.objectives[0].from;
 		InventaireObjective[1] = mresult.objectives[0].to;
 		InventaireObjective[2] = mresult.objectives[1].from;
 		InventaireObjective[3] = mresult.objectives[1].to;
-		InventaireObjective[4] = -1;
+		InventaireObjective[4] = -1;*/
 		// mettre -1 sur le dernier objectif comme arrêt
 
 		sendMove(&data,&mresult);
