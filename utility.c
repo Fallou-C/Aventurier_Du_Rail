@@ -397,13 +397,13 @@ int* Dijkstra(int src, Route** matrice, int n) // n = taille de la matrice
 	for(int i=0 ; i < n ; i++){D[i] = 1999;}
 	D[src] = 0;
 
-	for(int i=0; i < n-1; i++)
+	for(int i=0; i < n; i++)
 	{
 		u = distanceMini(D, visite, n);
 		visite[u] = true;
-		for(int j = 0; j < (n-1); j++)
+		for(int j = 0; j < n; j++)
 		{
-			if ((visite[j] == false) && (matrice[u][j].Nbr_Wagon<2000) && (D[u] + matrice[u][j].Nbr_Wagon < D[j]))
+			if ((visite[j] == false) && (matrice[u][j].Nbr_Wagon < 2000) && (D[u] + matrice[u][j].Nbr_Wagon < D[j]))
 			{
 				D[j] = D[u] + matrice[u][j].Nbr_Wagon;
 				prec[j] = u;
@@ -416,11 +416,6 @@ int* Dijkstra(int src, Route** matrice, int n) // n = taille de la matrice
 		else {D_prec[i]=prec[i-n];}
 	}
 	return D_prec;
-}
-
-int* ChoixObjectif(int* InventaireObjective, MoveResult mresult ) // renvoie un tableau de 3 booléen répresentant les objectifs choisie
-{
-	// calculer la distance mini des objecgis et prendre les plus courts
 }
 
 int* CheminCourt(int a,int b, Route** matrice, int n) // renvoie le prochain chemin à prendre pour aller de b à partir de a, renvoie -1 -1 si déjà complet
@@ -441,6 +436,7 @@ int* CheminCourt(int a,int b, Route** matrice, int n) // renvoie le prochain che
 	}
 
 	//printf("ville de départ: %d ",a);for(int  i = 0; i < n ; i++){printf(" distance par rapport à %d = %d \n", i,D[i]);}printf("\n");
+	//printf("tab prec de %d ",a);for(int  i = 0; i < n ; i++){printf(" prec de %d : %d \n", i,prec[i]);}printf("\n");
 	//int last=b;printf("chemin à prendre : ");for(int i = 0; i<n;i++){printf(" %d ",prec[last]);last=prec[last];}printf("\n");
 
 	int der_ville = b;
@@ -462,9 +458,12 @@ int* CheminCourt(int a,int b, Route** matrice, int n) // renvoie le prochain che
 	return chemin;
 }
 
-bool* CourtObjectif(int nbr_objectif, Route** matrice, int taille, int* InventaireObjective,MoveResult mresult ) //améliorable en prenant ceux gratuit par exemple
+bool* CourtObjectif(int nbr_objectif, Route** matrice, int taille, int* InventaireObjective,MoveResult mresult, bool mode ) //améliorable en prenant ceux gratuit par exemple
 {
 	// on prend les objectifs les plus simples à faire
+	int minmax;
+	if (mode){minmax = 1;} // on prend les plus petits
+	else{minmax = -1;} // les plus longs
 	bool* obj = (bool*)malloc(sizeof(bool)*3);
 	obj[0] = false;
 	obj[1] = false;
@@ -484,7 +483,7 @@ bool* CourtObjectif(int nbr_objectif, Route** matrice, int taille, int* Inventai
 	{
 		for(int j = 0; j < 3; j++)
 		{
-			if ((distance[j] < distance[ind_min]) && (!obj[j])) {ind_min = j;}
+			if ((distance[j]*minmax < distance[ind_min]*minmax) && (!obj[j])) {ind_min = j;}
 		}
 		obj[ind_min] = true;
 		InventaireObjective[ind_obj*2] = mresult.objectives[ind_min].from;

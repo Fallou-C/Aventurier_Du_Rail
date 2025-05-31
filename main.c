@@ -20,6 +20,7 @@ extern int DEBUG_LEVEL;
 -pb si entouré ou chemin impossible
 
 -algo de choix du chemin le plus rentable en terme de point pour les objectifs (choix)
+- pioche les cartes pour faire les objectifs
 - quand reprendre des objectifs
 - dystra et choix du plus petit chemin -> prendre en compte les cartes wagons qu'on a au début et garder les plus court ou plus rentable
 - dystra modifié pour choisir le chemin le plus rentable en fonction d'un delta décallage ou calculer les n chemin les plus court et choisir le plus court ou plus rentable
@@ -65,7 +66,7 @@ int main(void)
 	DEBUG_LEVEL = MESSAGE;
 
 	connectToCGS("82.29.170.160", 15001, "Natachaa");
-	sendGameSettings("TRAINING NICE_BOT seed=10592888",&Gdata);
+	sendGameSettings("TRAINING PLAY_RANDOM seed=10592888",&Gdata);
 	
 	MoveResult mresult;
 	MoveData data;

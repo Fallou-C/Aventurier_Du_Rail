@@ -66,7 +66,7 @@ void ClaimCourtChemin(int firstturn ,MoveResult mresult ,BoardState EtatPlateau,
 		data.action = 4;
 		sendMove(&data, &mresult);
 		data.action =  5;
-		bool* obj = CourtObjectif(2,  matrice,  taille,  InventaireObjective, mresult );
+		bool* obj = CourtObjectif(2,  matrice,  taille,  InventaireObjective, mresult, false );
 		
 		data.chooseObjectives[0] = obj[0];
 		data.chooseObjectives[1] = obj[1];
