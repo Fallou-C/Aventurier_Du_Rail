@@ -27,9 +27,12 @@ extern int DEBUG_LEVEL;
 - espèrance pour amliorer le chemin le plus rentable
 - attention cas où on a plus de 50 cartes !  (en soit jamais atteint si pas fait de connerie)
 
+- struc parametre pour simplifier les entrées pour les bots ?
+
 #bug : 
 -pproblème si ville plus ascessible
-
+	15722936 9616553  server fail
+	15019007 10485065 11899199 ??? -> corrigé !
 */
 
 
@@ -42,10 +45,8 @@ sendGameSetting( char* , GameData );
 char* = "TRAINING NICE_BOT"
 	"TRAINING PLAY_RANDOM"
 	"TRAINING DO_NOTHING"
-seed debug : 
-	probleme de message 10592888
-	pioche sans raison 10479304  8104058: 
-	core dump : 5199207 check -> pb quand tous étaient fini (chercher d'autre seed du même style enn sah)
+seed debug : 15019007 11547494 fini pas un objectif à analyser (peut keblo ou autre)
+
 +  messge de base dans le gamedata (message et op_message) null par défaut 
 */
 
@@ -66,7 +67,7 @@ int main(void)
 	DEBUG_LEVEL = MESSAGE;
 
 	connectToCGS("82.29.170.160", 15001, "Natachaa");
-	sendGameSettings("TRAINING PLAY_RANDOM seed=10592888",&Gdata);
+	sendGameSettings("TRAINING NICE_BOT seed=9616553",&Gdata); //TRAINING NICE_BOT seed=5199207
 	
 	MoveResult mresult;
 	MoveData data;
@@ -91,6 +92,7 @@ int main(void)
 	int wagon=45;
 	int min=4;
 	int objectif_actuelle = 0;
+	int nbcard;
 	// on initialise les cartes qu'on pioche : 
 	for(int i=0; i<4 ;i++)
 	{
@@ -99,7 +101,11 @@ int main(void)
 	
 	while(continuer)
 	{
+		getBoardState(&EtatPlateau);
+		nbcard = 0;
+		for(int i=0;i<10;i++){nbcard += InventaireCouleur[i];}
 		printBoard();
+		AfficherEtatPlateau(&EtatPlateau);
 		printf("%d joue\n",QuiJoue);
 		
 		if (QuiJoue == 1) // l'adversaire joue
@@ -120,6 +126,11 @@ int main(void)
 			}
 			QuiJoue = 0;
 		}
+		else if (nbcard > 47)
+		{
+			ClaimeurFou(firstturn, mresult ,EtatPlateau,InventaireCouleur,matrice,n,data,min,&wagon);
+		}
+		
 		else
 		{
 			ClaimCourtChemin(firstturn , mresult , EtatPlateau,  InventaireCouleur, InventaireObjective,  matrice, n, data, &wagon,min,objectif_actuelle);

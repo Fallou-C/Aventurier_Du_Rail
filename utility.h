@@ -10,7 +10,7 @@ void JouerSolo(int continuer,MoveResult mresult ,BoardState EtatPlateau);
 int* RouteGrise(int* InventaireCouleur, int a, int b, int tailleMatrice,Route route);
 int* RoutePrenable(int* InventaireCouleur, Route** matriceRoute, int tailleMatrice, int min, int* wagon);
 
-void ClaimeBarre(int option,MoveResult mresult ,BoardState EtatPlateau,MoveData data, int* InventaireCouleur);
+void ClaimeBarre(int option,MoveResult mresult ,BoardState EtatPlateau,MoveData data, int* InventaireCouleur,int couleur);
 void ClaimRoute(int option,int i, int j, Route** matriceRoute, int n,MoveResult mresult ,BoardState EtatPlateau,MoveData data, int* InventaireCouleur, int* wagon);
 
 int distanceMini(int* D, bool* visite, int n);

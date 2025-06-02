@@ -255,11 +255,11 @@ int* RoutePrenable(int* InventaireCouleur, Route** matriceRoute, int tailleMatri
 	return tab;
 }
 
-void ClaimeBarre(int option,MoveResult mresult ,BoardState EtatPlateau,MoveData data, int* InventaireCouleur)
+void ClaimeBarre(int option,MoveResult mresult ,BoardState EtatPlateau,MoveData data, int* InventaireCouleur,int couleur)
 {
 	switch (option)
 		{
-		case 0: // pioche à l'aveugle
+		case 0: // pioche à l'aveugle deux fois
 			printf("on pioche \n");
 			data.action = 2;
 			sendMove(&data, &mresult);
@@ -268,12 +268,53 @@ void ClaimeBarre(int option,MoveResult mresult ,BoardState EtatPlateau,MoveData 
 			InventaireCouleur[mresult.card] += 1;
 			break;
 		
-		case 1: // choisi une carte face visible
-			// to do
+		case 1: // on pioche à l'aveugle une fois
+			printf("on pioche \n");
+			data.action = 2;
+			sendMove(&data, &mresult);
+			InventaireCouleur[mresult.card] += 1;
 			break;
 
 		case 2: //prendre des objectifs
 			// to do 
+			break;
+
+		case 3:
+			// faire fonction pioche par rapport au chemin tous ça 
+			printf("on pioche ! \n");
+			bool OnAPioche = false;
+			for(int i=0;i<5;i++){
+				if (EtatPlateau.card[i] == couleur && !OnAPioche)
+				{
+					data.action = 3; 
+					data.drawCard = couleur;
+					sendMove(&data, &mresult);
+					free(mresult.opponentMessage);
+					free(mresult.message);
+					printf("on a prit %d hihihi \n",couleur);
+					OnAPioche = true;
+					getBoardState(&EtatPlateau);
+				}
+			}
+			if (!OnAPioche) {ClaimeBarre(1,mresult , EtatPlateau, data,  InventaireCouleur, 9);}
+			if (couleur != 9 || !OnAPioche)
+			{
+				OnAPioche = false;
+				for(int i=0;i<5;i++){
+				if (EtatPlateau.card[i] == couleur && !OnAPioche)
+				{
+					data.action = 3; 
+					data.drawCard = couleur;
+					sendMove(&data, &mresult);
+					free(mresult.opponentMessage);
+					free(mresult.message);
+					printf("on a prit %d hihihi \n",couleur);
+					getBoardState(&EtatPlateau);
+					OnAPioche = true;
+				}
+			}
+			}
+			if (!OnAPioche) {ClaimeBarre(1,mresult , EtatPlateau, data,  InventaireCouleur, 9);}
 			break;
 		}
 }
@@ -298,7 +339,7 @@ void ClaimRoute(int option,int i, int j, Route** matriceRoute, int n,MoveResult 
 			sendMove(&data, &mresult);
 		}
 		else{
-			ClaimeBarre(option,mresult , EtatPlateau, data,  InventaireCouleur);
+			ClaimeBarre(option,mresult , EtatPlateau, data,  InventaireCouleur, 9);
 		}
 	}
 	else if (((InventaireCouleur[route.Couleur1] + InventaireCouleur[9]) >= route.Nbr_Wagon ) && (route.Nbr_Wagon != 0) && (route.Nbr_Wagon <= *wagon))
@@ -366,7 +407,11 @@ void ClaimRoute(int option,int i, int j, Route** matriceRoute, int n,MoveResult 
 	}
 	else
 	{
-		ClaimeBarre(option,mresult , EtatPlateau, data,  InventaireCouleur);
+		if (InventaireCouleur[route.Couleur1] > InventaireCouleur[route.Couleur2]){
+			ClaimeBarre(option,mresult , EtatPlateau, data,  InventaireCouleur,route.Couleur1);}
+		else{
+			ClaimeBarre(option,mresult , EtatPlateau, data,  InventaireCouleur,route.Couleur2);
+		}
 	}
 	free(tab);
 }
@@ -494,4 +539,10 @@ bool* CourtObjectif(int nbr_objectif, Route** matrice, int taille, int* Inventai
 	}
 	InventaireObjective[ind_obj*2] = -1;
 	return obj;
+}
+
+// fonction pioche couleur en fonction de l'objectif désiré : locomotive ou couleur du prochain chemin à prendre sinon pioche au pif
+void PiocheChemin(BoardState EtatPlateau,int couleur)
+{
+	//
 }

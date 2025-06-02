@@ -97,7 +97,7 @@ void ClaimCourtChemin(int firstturn ,MoveResult mresult ,BoardState EtatPlateau,
 		}
 		printf("à claim :%d %d ab:%d %d obj : %d\n",prochain_claim[0],prochain_claim[1],a,b,objectif_actuelle);
 		if (prochain_claim[0] != -1){ //on regarde si l'objetifs à été fait
-			ClaimRoute(0,prochain_claim[0],prochain_claim[1],matrice, taille,mresult ,EtatPlateau,data,InventaireCouleur,wagon);
+			ClaimRoute(3,prochain_claim[0],prochain_claim[1],matrice, taille,mresult ,EtatPlateau,data,InventaireCouleur,wagon);
 			}
 		else{ClaimeurFou(firstturn, mresult ,EtatPlateau,InventaireCouleur,matrice,taille,data,min,wagon);}
 		free(prochain_claim);
