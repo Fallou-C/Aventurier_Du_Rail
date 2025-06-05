@@ -38,6 +38,8 @@ extern int DEBUG_LEVEL;
 
 	4220643 on pioche trop 
 
+	seed=10988714 je sais pas pourquoi le score change à chaque fois
+
 */
 
 
@@ -58,6 +60,8 @@ seed debug : 15019007 11547494 fini pas un objectif à analyser (peut keblo ou a
 
 int main(void)
 {
+	//for(int p =0;p< 5;p++){
+	
 	extern int DEBUG_LEVEL;
 	DEBUG_LEVEL = INTERN_DEBUG;
 
@@ -72,7 +76,7 @@ int main(void)
 	DEBUG_LEVEL = MESSAGE;
 
 	connectToCGS("82.29.170.160", 15001, "Nataaaacha");
-	sendGameSettings("TRAINING NICE_BOT seed=4220643",&Gdata); //TRAINING NICE_BOT seed=5199207   
+	sendGameSettings("TRAINING NICE_BOT seed=5199207",&Gdata); //TRAINING NICE_BOT seed=5199207    seed=4220643 11004452 8394301 seed=2752013 7577041 7557724		15247008
 	
 	MoveResult mresult;
 	MoveData data;
@@ -99,7 +103,8 @@ int main(void)
 
 	int QuiJoue = Gdata.starter;
 	int wagon=45;
-	int min=4;
+	int adv_wagon=45;
+	int min=10;
 	int objectif_actuelle = 0;
 	int nbcard;
 	// on initialise les cartes qu'on pioche : 
@@ -110,13 +115,16 @@ int main(void)
 	
 	while(continuer)
 	{
+		//printf("%d statre \n",mresult.state);	
+		//if (mresult.state == 1 || mresult.state == -1){continuer=0;}
+
 		getBoardState(&EtatPlateau);
 		nbcard = 0;
 		for(int i=0;i<10;i++){nbcard += InventaireCouleur[i];}
 		printBoard();
 		AfficherEtatPlateau(&EtatPlateau);
 		printf("%d joue\n",QuiJoue);
-		
+		printf("carte %d\n",nbcard);
 		if (QuiJoue == 1) // l'adversaire joue
 		{
 			printf("adversaire joue \n");
@@ -129,20 +137,26 @@ int main(void)
 			{
 				int a = data.claimRoute.from;
 				int b = data.claimRoute.to;
+				adv_wagon -= matrice[a][b].Nbr_Wagon;
 				matrice[a][b].Nbr_Wagon = 2000;
 				matrice[b][a].Nbr_Wagon = 2000;
 				printf("il prend from %d to %d \n",a,b);
 			}
 			QuiJoue = 0;
-		}/*
-		else if (nbcard > 47) 
+			if (mresult.state == 1 || mresult.state == -1 ){continuer=0;} // on s'arrêté
+		}
+		
+		else if (nbcard > 45) 
 		{
+			if (mresult.state == 1 || mresult.state == -1 ){sendMove(&data, &mresult);continuer=0;} // on s'arrêté
 			ClaimeurFou(firstturn, mresult ,EtatPlateau,InventaireCouleur,matrice,n,data,min,&wagon);
-		}*/
+			QuiJoue = 1;
+		}
 		// prendre des objectifs quand on en a fini où que l'on peut plus faire ce qu'on a
 		else
 		{
-			ClaimCourtChemin(firstturn , mresult , EtatPlateau,  InventaireCouleur, InventaireObjective,  matrice, n, data, &wagon,min,objectif_actuelle);
+			if (mresult.state == 1 || mresult.state == -1 ){sendMove(&data, &mresult);continuer=0;} // on s'arrêté
+			ClaimCourtChemin(firstturn , mresult , EtatPlateau,  InventaireCouleur, InventaireObjective,  matrice, n, data, &wagon,min,&objectif_actuelle,adv_wagon);
 			//ClaimeurFou(firstturn, mresult ,EtatPlateau,InventaireCouleur,matrice,n,data,min,&wagon);
 			//for(int i =0;i<10;i++){printf("nombre de carte couleur dispo : couleur %d nombre %d \n",i,InventaireCouleur[i]);}
 			for(int i =0;i<10;i++){printf("objecitfs : de %d à %d \n",InventaireObjective[2*i],InventaireObjective[i*2 +1]);}
@@ -155,11 +169,13 @@ int main(void)
 		}
 		//printf("qui commence : %d \n",Gdata.starter);
 		//JouerSolo(continuer,mresult,EtatPlateau);
-		//printf("obj en cours: %d", objectif_actuelle);
-	if (mresult.state!=0){continuer=0;} // on s'arrêté
+		printf("state  %d wagon %d advwagon: %d", mresult.state,wagon,adv_wagon);
+		
 	}
 	printf("c'est fini\n");
 	DetruireMatrice(matrice, n);
+	quitGame();
+//}
 	return 1;
 }
 

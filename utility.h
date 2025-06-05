@@ -20,6 +20,6 @@ int* ChoixObjectif(int* InventaireObjective, MoveResult mresult ); // renvoie un
 int* CheminCourt(int a,int b, Route** matrice, int n); // renvoie le prochain chemin à prendre pour aller de b à partir de a, renvoie -1 -1 si déjà complet
 
 bool* CourtObjectif(int nbr_objectif, Route** matrice, int taille, int* InventaireObjective,MoveResult mresult, bool mode,int objectif_actuelle );
-void AjoutObjectif(int taille, Route** matrice, int* InventaireObjective, MoveResult mresult, int wagon,int objectif_actuelle);
+void AjoutObjectif(int taille, Route** matrice, int* InventaireObjective, MoveResult mresult,MoveData data, int wagon,int* objectif_actuelle);
 
 #endif

@@ -292,6 +292,7 @@ void ClaimeBarre(int option,MoveResult mresult ,BoardState EtatPlateau,MoveData 
 					free(mresult.opponentMessage);
 					free(mresult.message);
 					printf("on a prit %d hihihi \n",couleur);
+					InventaireCouleur[couleur] += 1;
 					OnAPioche = true;
 					getBoardState(&EtatPlateau);
 				}
@@ -309,6 +310,7 @@ void ClaimeBarre(int option,MoveResult mresult ,BoardState EtatPlateau,MoveData 
 					free(mresult.opponentMessage);
 					free(mresult.message);
 					printf("on a prit %d hihihi \n",couleur);
+					InventaireCouleur[couleur] += 1;
 					getBoardState(&EtatPlateau);
 					OnAPioche = true;
 				}
@@ -636,13 +638,22 @@ bool* CourtObjectif(int nbr_objectif, Route** matrice, int taille, int* Inventai
 
 	int objective[6] = {mresult.objectives[0].from,mresult.objectives[0].to,mresult.objectives[1].from,mresult.objectives[1].to,mresult.objectives[2].from,mresult.objectives[2].to};
 
+	int ind_obj = 0;
+	int ind_min = 0;
+
 	for(int i=0;i<3;i++)
 	{
 		distance[i] = Dijkstra(objective[2*i],matrice, taille)[objective[2*i + 1]];
+		/*
+		if (distance[i] < 5) {obj[i] = true;
+			nbr_objectif -=1;
+			distance[ind_min] = 2001; // on ne le prend plus en compte
+			InventaireObjective[(ind_obj + objectif_actuelle )*2] = mresult.objectives[ind_min].from;
+			InventaireObjective[(ind_obj + objectif_actuelle )*2 + 1] = mresult.objectives[ind_min].to;
+			ind_obj += 1;
+		} // on prend si c'est petit*/
 	}
 
-	int ind_obj = 0;
-	int ind_min = 0;
 	for(int i = 0; i < nbr_objectif; i++)
 	{
 		for(int j = 0; j < 3; j++)
@@ -650,13 +661,15 @@ bool* CourtObjectif(int nbr_objectif, Route** matrice, int taille, int* Inventai
 			if ((distance[j]*minmax < distance[ind_min]*minmax) && (!obj[j])) {ind_min = j;}
 		}
 		obj[ind_min] = true;
+		distance[ind_min] = 2001; // on ne le prend plus en compte
 		InventaireObjective[(ind_obj + objectif_actuelle )*2] = mresult.objectives[ind_min].from;
 		InventaireObjective[(ind_obj + objectif_actuelle )*2 + 1] = mresult.objectives[ind_min].to;
 		ind_obj += 1;
-		if (obj[0]){ind_min = 1;}
-		else {ind_min = 0;}
+		//if (obj[0]){ind_min = 1;}
+		//else {ind_min = 0;}
 	}
-	InventaireObjective[ind_obj*2] = -1;
+	InventaireObjective[(ind_obj + objectif_actuelle)*2] = -1;
+	InventaireObjective[(ind_obj + objectif_actuelle)*2 +1] = -1;
 	return obj;
 }
 
@@ -666,9 +679,8 @@ void PiocheChemin(BoardState EtatPlateau,int couleur)
 	//
 }
 
-void AjoutObjectif(int taille, Route** matrice, int* InventaireObjective, MoveResult mresult, int wagon,int objectif_actuelle)
+void AjoutObjectif(int taille, Route** matrice, int* InventaireObjective, MoveResult mresult,MoveData data, int wagon,int* objectif_actuelle)
 {
-	MoveData data;
 	printf("On reprend des objectifs \n");
 	data.action = 4;
 	sendMove(&data, &mresult);
@@ -676,13 +688,12 @@ void AjoutObjectif(int taille, Route** matrice, int* InventaireObjective, MoveRe
 
 	bool* obj;
 
-	if (wagon < 20){
-		obj = CourtObjectif(1,  matrice,  taille,  InventaireObjective, mresult, true ,objectif_actuelle);}
-	else{obj = CourtObjectif(1,  matrice,  taille,  InventaireObjective, mresult, false ,objectif_actuelle);}
+	if (wagon < 30){
+		obj = CourtObjectif(2,  matrice,  taille,  InventaireObjective, mresult, true ,*objectif_actuelle);}
+	else{obj = CourtObjectif(2,  matrice,  taille,  InventaireObjective, mresult, false ,*objectif_actuelle);}
 	data.chooseObjectives[0] = obj[0];
 	data.chooseObjectives[1] = obj[1];
 	data.chooseObjectives[2] = obj[2];
 	AfficherObjectif(&mresult);
-	objectif_actuelle += 1;
 	sendMove(&data, &mresult);
 }
