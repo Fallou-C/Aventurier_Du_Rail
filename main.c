@@ -10,11 +10,6 @@ extern int DEBUG_LEVEL;
 
 //extern int* objectif_actuelle;
 
-
-//faire une structure route-> 0 si prise par nous +inf sinon    + dirac +  matrice de pointeur
-//stocker carte de couleur dans un tableau de int + stocker objective dans liste
-
-
 /*
 #to do :
 -pb si entouré ou chemin impossible
@@ -53,15 +48,14 @@ char* = "TRAINING NICE_BOT"
 	"TRAINING PLAY_RANDOM"
 	"TRAINING DO_NOTHING"
 seed debug : 15019007 11547494 fini pas un objectif à analyser (peut keblo ou autre)
-
+//seed=9892492
+seed=4220643 11004452 8394301 seed=2752013 7577041 7557724 15247008
 +  messge de base dans le gamedata (message et op_message) null par défaut 
 */
 
 
 int main(void)
-{
-	//for(int p =0;p< 5;p++){
-	
+{	
 	extern int DEBUG_LEVEL;
 	DEBUG_LEVEL = INTERN_DEBUG;
 
@@ -71,35 +65,20 @@ int main(void)
 	int InventaireObjective[20];
 
 	GameData Gdata;
-	//seed=9892492
 	BoardState EtatPlateau;
 	DEBUG_LEVEL = MESSAGE;
 
 	connectToCGS("82.29.170.160", 15001, "Nataaaacha");
-	sendGameSettings("TRAINING NICE_BOT seed=5199207",&Gdata); //TRAINING NICE_BOT seed=5199207    seed=4220643 11004452 8394301 seed=2752013 7577041 7557724		15247008
+	sendGameSettings("TRAINING NICE_BOT seed=5199207",&Gdata); //TRAINING NICE_BOT seed=5199207    		
 	
 	MoveResult mresult;
 	MoveData data;
-
-	/*
-	float moy = 0;
-	for (int i =0; i< Gdata.nbTracks; i++)
-	{
-		printf("%d %d %d %d %d\n",Gdata.trackData[i*5],Gdata.trackData[1 + 5*i],Gdata.trackData[2 + i*5],Gdata.trackData[3 + 5*i],Gdata.trackData[4 + 5*i]);
-		moy += Gdata.trackData[2 + i*5] ;
-	}
-	moy = moy/Gdata.nbTracks;
-	printf(" track moy = %f",moy);
-	*/
-	//printf("%d",Gdata.nbCities);
 	
 	printf("%d\n",Gdata.gameSeed);
 	
 	int n = Gdata.nbCities;
 	Route** matrice = AllouerMatrice(n);
 	MatriceAdjacence( matrice, n, Gdata.nbTracks, Gdata.trackData);
-	//AfficherMatrice(matrice, n);
-	//DetruireMatrice(matrice, n);
 
 	int QuiJoue = Gdata.starter;
 	int wagon=45;
@@ -107,6 +86,7 @@ int main(void)
 	int min=10;
 	int objectif_actuelle = 0;
 	int nbcard;
+
 	// on initialise les cartes qu'on pioche : 
 	for(int i=0; i<4 ;i++)
 	{
@@ -115,19 +95,11 @@ int main(void)
 	
 	while(continuer)
 	{
-		//printf("%d statre \n",mresult.state);	
-		//if (mresult.state == 1 || mresult.state == -1){continuer=0;}
-
 		getBoardState(&EtatPlateau);
 		nbcard = 0;
 		for(int i=0;i<10;i++){nbcard += InventaireCouleur[i];}
-		printBoard();
-		AfficherEtatPlateau(&EtatPlateau);
-		printf("%d joue\n",QuiJoue);
-		printf("carte %d\n",nbcard);
 		if (QuiJoue == 1) // l'adversaire joue
 		{
-			printf("adversaire joue \n");
 			getMove(&data, &mresult);
 			if ( (data.action == 2) || ((data.action == 3) && (data.drawCard != 9)) ||  data.action == 4 )
 			{
@@ -140,7 +112,6 @@ int main(void)
 				adv_wagon -= matrice[a][b].Nbr_Wagon;
 				matrice[a][b].Nbr_Wagon = 2000;
 				matrice[b][a].Nbr_Wagon = 2000;
-				printf("il prend from %d to %d \n",a,b);
 			}
 			QuiJoue = 0;
 			if (mresult.state == 1 || mresult.state == -1 ){continuer=0;} // on s'arrêté
@@ -157,99 +128,13 @@ int main(void)
 		{
 			if (mresult.state == 1 || mresult.state == -1 ){sendMove(&data, &mresult);continuer=0;} // on s'arrêté
 			ClaimCourtChemin(firstturn , mresult , EtatPlateau,  InventaireCouleur, InventaireObjective,  matrice, n, data, &wagon,min,&objectif_actuelle,adv_wagon);
-			//ClaimeurFou(firstturn, mresult ,EtatPlateau,InventaireCouleur,matrice,n,data,min,&wagon);
-			//for(int i =0;i<10;i++){printf("nombre de carte couleur dispo : couleur %d nombre %d \n",i,InventaireCouleur[i]);}
-			for(int i =0;i<10;i++){printf("objecitfs : de %d à %d \n",InventaireObjective[2*i],InventaireObjective[i*2 +1]);}
 			if(min>wagon){min=wagon;}
-			//printf("min = %d\n",min); 
-			// penser à compter les cartes
-			//printf("nbr wagon : %d\n",wagon);
 			QuiJoue = 1;
 			firstturn = 0 ;
 		}
-		//printf("qui commence : %d \n",Gdata.starter);
-		//JouerSolo(continuer,mresult,EtatPlateau);
-		printf("state  %d wagon %d advwagon: %d", mresult.state,wagon,adv_wagon);
 		
 	}
-	printf("c'est fini\n");
 	DetruireMatrice(matrice, n);
 	quitGame();
-//}
 	return 1;
 }
-
-/*
-debug seed 5199207:  check
-Les villes :
-Kansas City�ur 17 Houston 14 score: 5 
-Montréal;`�ur 29 Atlanta 25 score: 9 
-Winnipeg ;`�ur 10 Houston 14 score: 12 
-
-
-
-
-
-✘Objective Sault St. Marie (20) → Nashville (26) : -8 points
-	✘Objective Toronto (28) → Miami (35) : -10 points
-
-
-
-	int TirerPiocher=1;
-	int ComptePioche=0;
-	int ChoisirCarte = 1;
-//	int draw = 4;
-//	int choose = 5;
-	MoveData moveData1;
-	moveData1.action=4;
-	MoveData moveData2 = {5,{0,1,1}};
-	MoveData moveData3;
-	MoveData moveData4;
-	moveData4.action = 2;
-if (Gdata.starter!=1)
-		{
-			printf("ça envoie \n");
-			if(TirerPiocher)
-			{
-				connect = sendMove(&moveData1, &mresult);
-				printf("je tire! %d \n",connect);
-				printf("le move est : %d \n",mresult.state);
-				AfficherObjectif(mresult);
-				TirerPiocher--;
-				//free(&mresult);
-			}
-			else
-			{
-				connect = sendMove(&moveData2, &mresult);
-				printf("connect : %d \n",connect);
-				printf("on a bien pioché : %d \n",mresult.state);
-				//TirerPiocher++;
-				if (ComptePioche<5 && ChoisirCarte)
-				{
-					sendMove(&moveData4, &mresult);
-					ChoisirCarte --;
-					ComptePioche++;
-				}
-				else
-				{
-					ComptePioche--;
-					ChoisirCarte++;
-					Gdata.starter--;
-				//free(&mresult);
-				}
-			}
-		}
-		else
-		{
-			printf("gyatt\n");
-			getMove(&moveData3, &mresult);
-			printf("que fait l'adversaire: %d \n",moveData3.action);
-			if (moveData3.action==4)
-			{
-				//on fait rien
-			}
-			else
-			{
-				Gdata.starter++;
-			}
-		}*/
