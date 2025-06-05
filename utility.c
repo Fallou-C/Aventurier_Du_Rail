@@ -190,13 +190,13 @@ int* RoutePrenable(int* InventaireCouleur, Route** matriceRoute, int tailleMatri
 		for (int  j=0; j < i ; j++)
 		{
 			route = matriceRoute[i][j];
-			if ((route.Couleur1 == 9 || route.Couleur2 == 9) && route.Nbr_Wagon > min && route.Nbr_Wagon <= *wagon){
+			if ((route.Couleur1 == 9 || route.Couleur2 == 9) && (route.Nbr_Wagon > min) && (route.Nbr_Wagon <= *wagon)){
 				tab = RouteGrise(InventaireCouleur,i,j,tailleMatrice,route);
 				if (tab[4]){ // on renvoie que si on peut claim
 					*wagon -= matriceRoute[i][j].Nbr_Wagon;
 					matriceRoute[i][j].Nbr_Wagon = 0;
 					matriceRoute[j][i].Nbr_Wagon = 0;
-					return tab;}
+					return tab;}	
 			}
 			if (route.Couleur1 != 9 && ((InventaireCouleur[route.Couleur1] +  InventaireCouleur[9]) >= route.Nbr_Wagon ) && (route.Nbr_Wagon > min) && ( route.Nbr_Wagon <= *wagon))//+ InventaireCouleur[9] on ignore les joker
 			{
@@ -260,7 +260,7 @@ void ClaimeBarre(int option,MoveResult mresult ,BoardState EtatPlateau,MoveData 
 	switch (option)
 		{
 		case 0: // pioche à l'aveugle deux fois
-			printf("on pioche \n");
+			printf("on pioche 1\n");
 			data.action = 2;
 			sendMove(&data, &mresult);
 			InventaireCouleur[mresult.card] += 1;
@@ -269,7 +269,7 @@ void ClaimeBarre(int option,MoveResult mresult ,BoardState EtatPlateau,MoveData 
 			break;
 		
 		case 1: // on pioche à l'aveugle une fois
-			printf("on pioche \n");
+			printf("on pioche 2\n");
 			data.action = 2;
 			sendMove(&data, &mresult);
 			InventaireCouleur[mresult.card] += 1;
@@ -281,7 +281,7 @@ void ClaimeBarre(int option,MoveResult mresult ,BoardState EtatPlateau,MoveData 
 
 		case 3:
 			// faire fonction pioche par rapport au chemin tous ça 
-			printf("on pioche ! \n");
+			printf("on pioche %d ! \n", couleur);
 			bool OnAPioche = false;
 			for(int i=0;i<5;i++){
 				if (EtatPlateau.card[i] == couleur && !OnAPioche)
@@ -463,6 +463,16 @@ int* Dijkstra(int src, Route** matrice, int n) // n = taille de la matrice
 	return D_prec;
 }
 
+
+int suiv(int a, int* prec,int taille) // renvoie le suivant
+{
+	for(int i=0; i < taille; i++)
+	{
+		if (prec[i] == a) {return i;}
+	}
+	return -1;
+}
+
 int* CheminCourt(int a,int b, Route** matrice, int n) // renvoie le prochain chemin à prendre pour aller de b à partir de a, renvoie -1 -1 si déjà complet
 {
 	
@@ -483,27 +493,136 @@ int* CheminCourt(int a,int b, Route** matrice, int n) // renvoie le prochain che
 	//printf("ville de départ: %d ",a);for(int  i = 0; i < n ; i++){printf(" distance par rapport à %d = %d \n", i,D[i]);}printf("\n");
 	//printf("tab prec de %d ",a);for(int  i = 0; i < n ; i++){printf(" prec de %d : %d \n", i,prec[i]);}printf("\n");
 	//int last=b;printf("chemin à prendre : ");for(int i = 0; i<n;i++){printf(" %d ",prec[last]);last=prec[last];}printf("\n");
+	//int frst=a;printf("chemin à prendre (suiv) : ");for(int i = 0; i<n;i++){printf(" %d ",prec[suiv(frst,prec,n)]);frst=prec[suiv(frst,prec,n)];}printf("\n");
+	//printf("a = %d prec = %d suiv = %d prec(suiv) = %d \n",a,prec[a],suiv(a,prec,n),prec[suiv(a,prec,n)]);
 
 	int der_ville = b;
-	while( (der_ville != a) && (matrice[prec[der_ville]][der_ville].Nbr_Wagon != 0) ) // si on arrive sur a ou une route déjà claim
+	//printf("a , der_ville , prec(der) et nb wagon dernier claim : %d %d %d %d\n",a,der_ville,prec[der_ville],matrice[prec[der_ville]][der_ville].Nbr_Wagon);
+	//printf("bool1 %d bool2 %d \n",(der_ville != a) ,(matrice[prec[der_ville]][der_ville].Nbr_Wagon != 0));
+
+	// si on a déjà claime une des routes sur le chemin il s'arrête dessus
+	/*
+	while( (der_ville != a) ) // si on arrive sur a ou une route déjà claim 
 	{
 		chemin[1] = der_ville;
 		der_ville = prec[der_ville];
 		chemin[0] = der_ville;
+		//if ((der_ville = b) ){printf("derville = %d \n",der_ville);}
+		printf(" chemin: %d %d taille : %d\n",chemin[0],chemin[1],matrice[chemin[0]][chemin[1]].Nbr_Wagon);
+	}*/
+
+	der_ville = b;
+	while( ((der_ville != a) && (matrice[prec[der_ville]][der_ville].Nbr_Wagon != 0)) ) // si on arrive sur a ou une route déjà claim 
+	{
+		chemin[1] = der_ville;
+		der_ville = prec[der_ville];
+		chemin[0] = der_ville;
+		//if ((der_ville = b) ){printf("derville = %d \n",der_ville);}
 		//printf(" deux dernière ville %d %d\n",chemin[0],chemin[1]);
 	}
 
-	if (matrice[prec[b]][b].Nbr_Wagon == 0) 
+	int der_Chemin[2];
+	der_Chemin[0] = der_ville;
+	der_ville = prec[der_ville];
+	der_Chemin[1] = der_ville;
+	
+	/*
+	if ((matrice[prec[b]][b].Nbr_Wagon == 0) ) // changé ça
 	{
 		chemin[0]=-1;
 		chemin[1]=-1;
-		return chemin;
-	}
+	}*/
 
+	der_ville = b;
+	while( ((der_ville != a) && (matrice[prec[der_ville]][der_ville].Nbr_Wagon == 0)) ) // si on arrive sur a ou une route déjà claim
+	{
+		chemin[1] = der_ville;
+		der_ville = prec[der_ville];
+		chemin[0] = der_ville;
+		//printf(" deux dernière ville %d %d a? : %d\n",chemin[0],chemin[1], der_ville==a);
+		if ((der_ville==a) ){
+			chemin[0]=-1;
+			chemin[1]=-1;
+			return chemin;
+		}
+	}
+	chemin[1] = der_ville;
+		der_ville = prec[der_ville];
+		chemin[0] = der_ville;
+
+	/*
+	if (chemin[0] == -1)
+	{
+		der_ville = b;
+		while( der_ville != a && (matrice[prec[der_ville]][der_ville].Nbr_Wagon == 0)) // si on arrive sur a ou une route déjà claim
+		{
+			chemin[0] = der_ville;
+			der_ville = prec[der_ville];
+			chemin[1] = der_ville;
+		//printf(" deux dernière ville %d %d\n",chemin[0],chemin[1]);
+		}
+	}*/
+
+	// to do vérifier que y'ai bien que des chemins nuls
+	/*
+	int prem_Chemin[2];
+	while( der_ville != a ) // si on arrive sur a ou une route déjà claim
+	{
+		prem_Chemin[0] = der_ville;
+		der_ville = prec[der_ville];
+		prem_Chemin[1] = der_ville;
+		//printf(" deux dernière ville %d %d\n",chemin[0],chemin[1]);
+	}*/
+	//printf("  premier chemin %d %d\n",prec[b],b);
+	//printf("  dernière chemin %d %d\n",der_Chemin[0],der_Chemin[1]);
+
+	//printf("prec(b) b : %d %d \n",prec[b],b);
+
+	// on regarde si les deux extrémités ont été claim
+	/*
+	if ((matrice[prec[b]][b].Nbr_Wagon == 0) && (matrice[der_Chemin[0]][der_Chemin[1]].Nbr_Wagon == 0))
+	{
+		chemin[0]=-1;
+		chemin[1]=-1;
+	}*/
+
+	/*
+	while(der_ville != a)
+	{
+		if (matrice[prec[der_ville]][der_ville].Nbr_Wagon != 0)
+		{
+			return chemin;
+		}
+		chemin[1] = der_ville;
+		der_ville = prec[der_ville];
+		chemin[0] = der_ville;
+	}
+	chemin[0]=-1;
+	chemin[1]=-1;
+
+	
+	// on vérifie dans l'autre sens si le chemin est compléter (cas chemin dans un chemin)
+	if ((chemin[0] == -1) && matrice[suiv(a,prec,n)][a].Nbr_Wagon == 0){
+		der_ville = a;
+		while( (der_ville != b) && (matrice[suiv(der_ville,prec,n)][der_ville].Nbr_Wagon != 0) ) // si on arrive sur a ou une route déjà claim
+		{
+			chemin[1] = der_ville;
+			der_ville = suiv(der_ville,prec,n);
+			chemin[0] = der_ville;
+			printf(" deux dernière ville %d %d\n",chemin[0],chemin[1]);
+			if (suiv(der_ville,prec,n) == -1)
+			{
+				chemin[0] = -1;
+				chemin[1] = -1;
+				return chemin;
+			}
+		}
+	}*/
+	
 	return chemin;
 }
 
-bool* CourtObjectif(int nbr_objectif, Route** matrice, int taille, int* InventaireObjective,MoveResult mresult, bool mode ) //améliorable en prenant ceux gratuit par exemple
+bool* CourtObjectif(int nbr_objectif, Route** matrice, int taille, int* InventaireObjective,MoveResult mresult, bool mode , int objectif_actuelle) //améliorable en prenant ceux gratuit par exemple
 {
 	// on prend les objectifs les plus simples à faire
 	int minmax;
@@ -531,8 +650,8 @@ bool* CourtObjectif(int nbr_objectif, Route** matrice, int taille, int* Inventai
 			if ((distance[j]*minmax < distance[ind_min]*minmax) && (!obj[j])) {ind_min = j;}
 		}
 		obj[ind_min] = true;
-		InventaireObjective[ind_obj*2] = mresult.objectives[ind_min].from;
-		InventaireObjective[ind_obj*2 + 1] = mresult.objectives[ind_min].to;
+		InventaireObjective[(ind_obj + objectif_actuelle )*2] = mresult.objectives[ind_min].from;
+		InventaireObjective[(ind_obj + objectif_actuelle )*2 + 1] = mresult.objectives[ind_min].to;
 		ind_obj += 1;
 		if (obj[0]){ind_min = 1;}
 		else {ind_min = 0;}
@@ -545,4 +664,25 @@ bool* CourtObjectif(int nbr_objectif, Route** matrice, int taille, int* Inventai
 void PiocheChemin(BoardState EtatPlateau,int couleur)
 {
 	//
+}
+
+void AjoutObjectif(int taille, Route** matrice, int* InventaireObjective, MoveResult mresult, int wagon,int objectif_actuelle)
+{
+	MoveData data;
+	printf("On reprend des objectifs \n");
+	data.action = 4;
+	sendMove(&data, &mresult);
+	data.action =  5;
+
+	bool* obj;
+
+	if (wagon < 20){
+		obj = CourtObjectif(1,  matrice,  taille,  InventaireObjective, mresult, true ,objectif_actuelle);}
+	else{obj = CourtObjectif(1,  matrice,  taille,  InventaireObjective, mresult, false ,objectif_actuelle);}
+	data.chooseObjectives[0] = obj[0];
+	data.chooseObjectives[1] = obj[1];
+	data.chooseObjectives[2] = obj[2];
+	AfficherObjectif(&mresult);
+	objectif_actuelle += 1;
+	sendMove(&data, &mresult);
 }

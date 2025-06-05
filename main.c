@@ -31,8 +31,13 @@ extern int DEBUG_LEVEL;
 
 #bug : 
 -pproblème si ville plus ascessible
-	15722936 9616553  server fail
+	15722936 9616553  server fail (fail plus car le bot à changé)
 	15019007 10485065 11899199 ??? -> corrigé !
+	seed=15019007 on a un objectif dans un autre dés le début
+	4048977 gros lag like the f???
+
+	4220643 on pioche trop 
+
 */
 
 
@@ -66,17 +71,21 @@ int main(void)
 	BoardState EtatPlateau;
 	DEBUG_LEVEL = MESSAGE;
 
-	connectToCGS("82.29.170.160", 15001, "Natachaa");
-	sendGameSettings("TRAINING NICE_BOT seed=9616553",&Gdata); //TRAINING NICE_BOT seed=5199207
+	connectToCGS("82.29.170.160", 15001, "Nataaaacha");
+	sendGameSettings("TRAINING NICE_BOT seed=4220643",&Gdata); //TRAINING NICE_BOT seed=5199207   
 	
 	MoveResult mresult;
 	MoveData data;
 
-	/*	
+	/*
+	float moy = 0;
 	for (int i =0; i< Gdata.nbTracks; i++)
 	{
 		printf("%d %d %d %d %d\n",Gdata.trackData[i*5],Gdata.trackData[1 + 5*i],Gdata.trackData[2 + i*5],Gdata.trackData[3 + 5*i],Gdata.trackData[4 + 5*i]);
+		moy += Gdata.trackData[2 + i*5] ;
 	}
+	moy = moy/Gdata.nbTracks;
+	printf(" track moy = %f",moy);
 	*/
 	//printf("%d",Gdata.nbCities);
 	
@@ -125,19 +134,20 @@ int main(void)
 				printf("il prend from %d to %d \n",a,b);
 			}
 			QuiJoue = 0;
-		}
-		else if (nbcard > 47)
+		}/*
+		else if (nbcard > 47) 
 		{
 			ClaimeurFou(firstturn, mresult ,EtatPlateau,InventaireCouleur,matrice,n,data,min,&wagon);
-		}
-		
+		}*/
+		// prendre des objectifs quand on en a fini où que l'on peut plus faire ce qu'on a
 		else
 		{
 			ClaimCourtChemin(firstturn , mresult , EtatPlateau,  InventaireCouleur, InventaireObjective,  matrice, n, data, &wagon,min,objectif_actuelle);
 			//ClaimeurFou(firstturn, mresult ,EtatPlateau,InventaireCouleur,matrice,n,data,min,&wagon);
 			//for(int i =0;i<10;i++){printf("nombre de carte couleur dispo : couleur %d nombre %d \n",i,InventaireCouleur[i]);}
-			//for(int i =0;i<10;i++){printf("objecitfs : de %d à %d \n",InventaireObjective[2*i],InventaireObjective[i*2 +1]);}
-			if(min>wagon){min=wagon;} 
+			for(int i =0;i<10;i++){printf("objecitfs : de %d à %d \n",InventaireObjective[2*i],InventaireObjective[i*2 +1]);}
+			if(min>wagon){min=wagon;}
+			//printf("min = %d\n",min); 
 			// penser à compter les cartes
 			//printf("nbr wagon : %d\n",wagon);
 			QuiJoue = 1;
@@ -145,6 +155,8 @@ int main(void)
 		}
 		//printf("qui commence : %d \n",Gdata.starter);
 		//JouerSolo(continuer,mresult,EtatPlateau);
+		//printf("obj en cours: %d", objectif_actuelle);
+	if (mresult.state!=0){continuer=0;} // on s'arrêté
 	}
 	printf("c'est fini\n");
 	DetruireMatrice(matrice, n);

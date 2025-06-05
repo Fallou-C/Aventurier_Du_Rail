@@ -66,7 +66,7 @@ void ClaimCourtChemin(int firstturn ,MoveResult mresult ,BoardState EtatPlateau,
 		data.action = 4;
 		sendMove(&data, &mresult);
 		data.action =  5;
-		bool* obj = CourtObjectif(2,  matrice,  taille,  InventaireObjective, mresult, false );
+		bool* obj = CourtObjectif(2,  matrice,  taille,  InventaireObjective, mresult, true ,objectif_actuelle);
 		
 		data.chooseObjectives[0] = obj[0];
 		data.chooseObjectives[1] = obj[1];
@@ -88,18 +88,25 @@ void ClaimCourtChemin(int firstturn ,MoveResult mresult ,BoardState EtatPlateau,
 		a = InventaireObjective[objectif_actuelle * 2];
 		b = InventaireObjective[objectif_actuelle * 2 + 1];
 		int* prochain_claim = CheminCourt(a,b,matrice,taille);
-		if ( prochain_claim[0] == -1)
-		{	if (a!=-1){
-			objectif_actuelle +=1;}
+		if ( prochain_claim[0] == -1 && a!=-1)
+		{
+			objectif_actuelle +=1;
 			a = InventaireObjective[objectif_actuelle * 2];
 			b = InventaireObjective[objectif_actuelle * 2 + 1];
 			prochain_claim = CheminCourt(a,b,matrice,taille);
 		}
-		printf("à claim :%d %d ab:%d %d obj : %d\n",prochain_claim[0],prochain_claim[1],a,b,objectif_actuelle);
+		printf("à claim :%d %d a b:%d %d obj : %d\n",prochain_claim[0],prochain_claim[1],a,b,objectif_actuelle);
 		if (prochain_claim[0] != -1){ //on regarde si l'objetifs à été fait
 			ClaimRoute(3,prochain_claim[0],prochain_claim[1],matrice, taille,mresult ,EtatPlateau,data,InventaireCouleur,wagon);
 			}
-		else{ClaimeurFou(firstturn, mresult ,EtatPlateau,InventaireCouleur,matrice,taille,data,min,wagon);}
+		/*
+		else if ((*wagon > 10) && (a ==-1)){ // penser à regazrder les wagons de l'adversaire
+			printf("on reprend des objectifs \n");
+			AjoutObjectif(taille, matrice,InventaireObjective, mresult,*wagon,objectif_actuelle);
+		}*/
+		else{
+			printf("claim fou\n");
+			ClaimeurFou(firstturn, mresult ,EtatPlateau,InventaireCouleur,matrice,taille,data,min,wagon);}
 		free(prochain_claim);
 	}	
 }
