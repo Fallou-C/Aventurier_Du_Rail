@@ -160,7 +160,9 @@ int* RouteGrise(int* InventaireCouleur, int a, int b, int tailleMatrice,Route ro
 	for(int i=0;i<10;i++)
 	{
 		if (InventaireCouleur[i] > InventaireCouleur[j]) {j = i;}
-	}
+	} // j indice du max
+	//printf("couleur max : %d \n",j);
+	//printf(" on peut claime : %d\n",InventaireCouleur[j] >= route.Nbr_Wagon);
 	if (InventaireCouleur[j] >= route.Nbr_Wagon){
 		tab[0] = a;
 		tab[1] = b;
@@ -258,6 +260,7 @@ void ClaimeBarre(int option,MoveResult mresult ,BoardState EtatPlateau,MoveData 
 	switch (option)
 		{
 		case 0: // pioche à l'aveugle deux fois
+			printf("on pioche 1\n");
 			data.action = 2;
 			sendMove(&data, &mresult);
 			InventaireCouleur[mresult.card] += 1;
@@ -266,6 +269,7 @@ void ClaimeBarre(int option,MoveResult mresult ,BoardState EtatPlateau,MoveData 
 			break;
 		
 		case 1: // on pioche à l'aveugle une fois
+			printf("on pioche 2\n");
 			data.action = 2;
 			sendMove(&data, &mresult);
 			InventaireCouleur[mresult.card] += 1;
@@ -277,6 +281,7 @@ void ClaimeBarre(int option,MoveResult mresult ,BoardState EtatPlateau,MoveData 
 
 		case 3:
 			// faire fonction pioche par rapport au chemin tous ça 
+			printf("on pioche %d ! \n", couleur);
 			bool OnAPioche = false;
 			for(int i=0;i<5;i++){
 				if (EtatPlateau.card[i] == couleur && !OnAPioche)
@@ -286,6 +291,7 @@ void ClaimeBarre(int option,MoveResult mresult ,BoardState EtatPlateau,MoveData 
 					sendMove(&data, &mresult);
 					free(mresult.opponentMessage);
 					free(mresult.message);
+					printf("on a prit %d hihihi \n",couleur);
 					InventaireCouleur[couleur] += 1;
 					OnAPioche = true;
 					getBoardState(&EtatPlateau);
@@ -303,6 +309,7 @@ void ClaimeBarre(int option,MoveResult mresult ,BoardState EtatPlateau,MoveData 
 					sendMove(&data, &mresult);
 					free(mresult.opponentMessage);
 					free(mresult.message);
+					printf("on a prit %d hihihi \n",couleur);
 					InventaireCouleur[couleur] += 1;
 					getBoardState(&EtatPlateau);
 					OnAPioche = true;
@@ -318,6 +325,7 @@ void ClaimRoute(int option,int i, int j, Route** matriceRoute, int n,MoveResult 
 {
 	int* tab = (int *)malloc(6 * sizeof(int));
 	Route route = matriceRoute[i][j];
+    printf("route : %d %d %d\n",route.Couleur1,route.Couleur2,route.Nbr_Wagon);
 	if ((route.Couleur1 == 9 || route.Couleur2 == 9) && (route.Nbr_Wagon > 0) && (route.Nbr_Wagon <= *wagon) ){
 		tab = RouteGrise(InventaireCouleur,i,j,n,route);
 		if (tab[4]){ // on renvoie que si on peut claim
@@ -329,6 +337,7 @@ void ClaimRoute(int option,int i, int j, Route** matriceRoute, int n,MoveResult 
 			data.claimRoute.to = tab[1];
 			data.claimRoute.color = tab[2];
 			data.claimRoute.nbLocomotives = tab[5]; // nombre de joker qu'on joue
+			printf("from %d to %d color %d nbloc %d \n",tab[0],tab[1],tab[2],tab[3]);
 			sendMove(&data, &mresult);
 		}
 		else{
@@ -363,6 +372,7 @@ void ClaimRoute(int option,int i, int j, Route** matriceRoute, int n,MoveResult 
 		data.claimRoute.color = tab[2];
 		data.claimRoute.nbLocomotives = tab[5]; // nombre de joker qu'on joue
 
+		printf("from %d to %d color %d nbloc %d \n",tab[0],tab[1],tab[2],tab[3]);
 		sendMove(&data, &mresult);
 	}
 	else if (((InventaireCouleur[route.Couleur2]) >= route.Nbr_Wagon )  && (route.Nbr_Wagon != 0) && (route.Nbr_Wagon <= *wagon))
@@ -394,6 +404,7 @@ void ClaimRoute(int option,int i, int j, Route** matriceRoute, int n,MoveResult 
 		data.claimRoute.color = tab[2];
 
 		data.claimRoute.nbLocomotives = tab[5]; // nombre de joker qu'on joue
+		printf("from %d to %d color %d nbloc %d \n",tab[0],tab[1],tab[2],tab[3]);
 		sendMove(&data, &mresult);
 	}
 	else
@@ -508,11 +519,9 @@ int* CheminCourt(int a,int b, Route** matrice, int n) // renvoie le prochain che
 			return chemin;
 		}
 	}
-	chemin[1] = der_ville;
-	der_ville = prec[der_ville];
 	chemin[0] = der_ville;
-
-	
+	der_ville = prec[der_ville];
+	chemin[1] = der_ville;	
 	return chemin;
 }
 
@@ -544,8 +553,9 @@ bool* CourtObjectif(int nbr_objectif, Route** matrice, int taille, int* Inventai
 		{
 			if ((distance[j]*minmax < distance[ind_min]*minmax) && (!obj[j])) {ind_min = j;}
 		}
+		if (distance[ind_min] == 0){nbr_objectif ++;}//on le considère gratuit et on le prend 
 		obj[ind_min] = true;
-		distance[ind_min] = 2001; // on ne le prend plus en compte
+		distance[ind_min] = 1998; // on ne le prend plus en compte
 		InventaireObjective[(ind_obj + objectif_actuelle )*2] = mresult.objectives[ind_min].from;
 		InventaireObjective[(ind_obj + objectif_actuelle )*2 + 1] = mresult.objectives[ind_min].to;
 		ind_obj += 1;
@@ -557,6 +567,7 @@ bool* CourtObjectif(int nbr_objectif, Route** matrice, int taille, int* Inventai
 
 void AjoutObjectif(int taille, Route** matrice, int* InventaireObjective, MoveResult mresult,MoveData data, int wagon,int* objectif_actuelle)
 {
+	data.action = 4;
 	data.action = 4;
 	sendMove(&data, &mresult);
 	data.action =  5;

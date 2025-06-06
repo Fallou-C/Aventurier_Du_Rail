@@ -26,3 +26,6 @@ clean :
 
 git :
 	git -C ../tickettorideapi pull
+
+bot : main.o  ticketToRide.o clientAPI.o matrice.o utility.o bot.o
+	gcc -Wall -o bot main.o clientAPI.o ticketToRide.o matrice.o utility.o bot.o
